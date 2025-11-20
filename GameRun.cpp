@@ -72,14 +72,6 @@ void Game::ImGuiRelated()
         ImGui::End();
     }
 
-    if (ImGui::Begin("cute snake"))
-    {
-        if (ImGui::ImageButton("snake", *textureManager.get("snake.png"), {100, 100}))
-        {
-            INFO("sisisi");
-        }
-        ImGui::End();
-    }
     spawnableBrowser.render();
 }
 void Game::KeyLogic()
