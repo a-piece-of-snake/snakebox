@@ -1,4 +1,0 @@
-/home/snake/code/cpp/test1/build/CMakeFiles/main.dir
-/home/snake/code/cpp/test1/build/CMakeFiles/copy_assets.dir
-/home/snake/code/cpp/test1/build/CMakeFiles/edit_cache.dir
-/home/snake/code/cpp/test1/build/CMakeFiles/rebuild_cache.dir
