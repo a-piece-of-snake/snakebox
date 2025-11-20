@@ -1,0 +1,74 @@
+[
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/main.cpp.o -c /home/snake/code/cpp/test1/main.cpp",
+  "file": "/home/snake/code/cpp/test1/main.cpp",
+  "output": "CMakeFiles/main.dir/main.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/GameDestroy.cpp.o -c /home/snake/code/cpp/test1/GameDestroy.cpp",
+  "file": "/home/snake/code/cpp/test1/GameDestroy.cpp",
+  "output": "CMakeFiles/main.dir/GameDestroy.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/GameInit.cpp.o -c /home/snake/code/cpp/test1/GameInit.cpp",
+  "file": "/home/snake/code/cpp/test1/GameInit.cpp",
+  "output": "CMakeFiles/main.dir/GameInit.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/GameRun.cpp.o -c /home/snake/code/cpp/test1/GameRun.cpp",
+  "file": "/home/snake/code/cpp/test1/GameRun.cpp",
+  "output": "CMakeFiles/main.dir/GameRun.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/Resources.cpp.o -c /home/snake/code/cpp/test1/Resources.cpp",
+  "file": "/home/snake/code/cpp/test1/Resources.cpp",
+  "output": "CMakeFiles/main.dir/Resources.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/Render.cpp.o -c /home/snake/code/cpp/test1/Render.cpp",
+  "file": "/home/snake/code/cpp/test1/Render.cpp",
+  "output": "CMakeFiles/main.dir/Render.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui_demo.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui_demo.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui_demo.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui_demo.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui_draw.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui_draw.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui_draw.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui_draw.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui_tables.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui_tables.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui_tables.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui_tables.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui_widgets.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui_widgets.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui_widgets.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui_widgets.cpp.o"
+},
+{
+  "directory": "/home/snake/code/cpp/test1/build",
+  "command": "/usr/bin/c++  -I/home/snake/code/cpp/test1 -I/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include -I/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include -I/home/snake/code/cpp/test1/imgui -g -std=gnu++23 -o CMakeFiles/main.dir/imgui/imgui-SFML.cpp.o -c /home/snake/code/cpp/test1/imgui/imgui-SFML.cpp",
+  "file": "/home/snake/code/cpp/test1/imgui/imgui-SFML.cpp",
+  "output": "CMakeFiles/main.dir/imgui/imgui-SFML.cpp.o"
+}
+]

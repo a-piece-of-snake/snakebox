@@ -1,0 +1,7 @@
+# 第一次
+mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug
+
+# 之后只 rebuild
+cd build
+cmake --build . -j$(nproc)
+./main

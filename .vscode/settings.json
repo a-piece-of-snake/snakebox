@@ -1,0 +1,25 @@
+{
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  // 关键：不再使用 cpptools 作为格式化器
+  "[cpp]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  // 禁用 cpptools 的格式化（避免冲突）
+  "C_Cpp.formatting": "disabled",
+  "C_Cpp.clang_format_style": "file",
+  "C_Cpp.errorSquiggles": "enabled",
+  "clangd.arguments": [
+    "--header-insertion=never",
+    "--header-insertion-decorations=false"
+  ],
+  "search.exclude": {
+    "**/imgui": true,
+    "**/build": true,
+    "**/Assets": true
+  }
+}
