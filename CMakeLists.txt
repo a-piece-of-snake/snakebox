@@ -12,6 +12,7 @@ set(SOURCES
     GameRun.cpp
     Resources.cpp
     Render.cpp
+    Fluid.cpp
 )
 
 # =============== 可执行文件 ===============

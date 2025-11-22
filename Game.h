@@ -61,6 +61,7 @@ private:
     int particleCount = 0;
     std::vector<b2BodyId> bodyIds;
     b2WorldId worldId;
+    ParticleWorld particleWorld;
 
     // 循环分解
     void InitWindow();

@@ -218,12 +218,15 @@ void Game::UpdateWorld()
     if (!pause)
     {
         b2World_Step(worldId, 1.0f / 15.f, 4);
+        particleWorld.update();
+        particleWorld.groups[0].createParticle(worldId, worldPos);
     }
     return;
 }
 void Game::DrawWorld()
 {
     drawB2(window, bodyIds);
+    drawFluid(window, particleWorld);
 }
 void Game::RenderUi()
 {

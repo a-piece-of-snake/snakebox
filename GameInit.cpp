@@ -204,6 +204,11 @@ void Game::InitResources()
 
 void Game::InitFluid()
 {
-    //Where is the fluid?
+    ParticleGroup group;
+    group.world = &particleWorld;
+    group.color = sf::Color::Cyan;
+    particleWorld.groups.push_back(std::move(group));
+
+    SUCCESS("Successfully initialized fluid!");
     return;
 }

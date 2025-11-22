@@ -1,7 +1,9 @@
 #include "Render.h"
 
-void drawB2(sf::RenderWindow& window, std::vector<b2BodyId>& bodyIds)
+void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds)
 {
+    sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
+    sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
     for (const auto& bodyId : bodyIds)
     {
         int shapecount = b2Body_GetShapeCount(bodyId);
@@ -12,8 +14,6 @@ void drawB2(sf::RenderWindow& window, std::vector<b2BodyId>& bodyIds)
         float angle = atan2(rot.s, rot.c);
         float cosAngle = cos(angle);
         float sinAngle = sin(angle);
-        sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
-        sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
         for (const auto& shapeId : shapeIds)
         {
             b2ShapeType shapeType = b2Shape_GetType(shapeId);
@@ -98,7 +98,34 @@ void drawB2(sf::RenderWindow& window, std::vector<b2BodyId>& bodyIds)
                 ERROR("Unknow box2d type!");
             }
         }
-        window.draw(shapeVertexArray);
-        window.draw(outlineVertexArray);
     }
+    window.draw(shapeVertexArray);
+    window.draw(outlineVertexArray);
+}
+void drawFluid(sf::RenderWindow& window, const ParticleWorld& particleWorld)
+{
+    static const b2Vec2 offect[3] = {{1, 0}, {-1, 1}, {-1, -1}};
+    sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
+    sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
+    for (const ParticleGroup& group : particleWorld.groups)
+    {
+        float radius = group.config.radius;
+        for (const Particle& particle : group.particles)
+        {
+            b2Vec2 pos1 = particle.pos + offect[0] * radius;
+            b2Vec2 pos2 = particle.pos + offect[1] * radius;
+            b2Vec2 pos3 = particle.pos + offect[2] * radius;
+            shapeVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2Body));
+            shapeVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2Body));
+            shapeVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2Body));
+            outlineVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2BodyOutline));
+            outlineVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2BodyOutline));
+            outlineVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2BodyOutline));
+            outlineVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2BodyOutline));
+            outlineVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2BodyOutline));
+            outlineVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2BodyOutline));
+        }
+    }
+    window.draw(shapeVertexArray);
+    window.draw(outlineVertexArray);
 }
