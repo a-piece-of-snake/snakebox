@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ColorfulLog.h"
+#include "Math.h"
 #include "ThreadPool.h"
 
 
@@ -69,9 +70,9 @@ class ParticleWorld
 {
 private:
     ThreadPool threadPool{4};
-    std::vector<std::vector<Particle*>> grids;
 
 public:
+    std::vector<std::vector<Particle*>> grids;
     std::vector<ParticleGroup> groups;
     void init();
     void update();

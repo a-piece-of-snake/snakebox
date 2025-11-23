@@ -187,6 +187,7 @@ void Game::InitResources()
             b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
             b2Circle dynamicCircle;
             dynamicCircle.radius = size;
+            dynamicCircle.center = b2Vec2_zero;
             b2ShapeDef shapeDef = b2DefaultShapeDef();
             shapeDef.density = 1.0f;
             shapeDef.material.friction = friction;
@@ -198,6 +199,19 @@ void Game::InitResources()
         };
         spawnableBrowser.addObject(circle);
     }
+    {
+        SpawnableObject particle;
+        particle.name = "particle";
+        particle.type = "particle";
+        particle.describe = "An ordinary circle.";
+        particle.icon = *textureManager.get("snake.png");
+        particle.onSpawned = [this](b2Vec2 pos, float size, float friction, float restitution) -> bool {
+            particleWorld.groups[0].createParticle(worldId, pos);
+
+            return true;
+        };
+        spawnableBrowser.addObject(particle);
+    }
     SUCCESS("Successfully initialized resources!");
     return;
 }
@@ -208,7 +222,7 @@ void Game::InitFluid()
     group.world = &particleWorld;
     group.color = sf::Color::Cyan;
     particleWorld.groups.push_back(std::move(group));
-
+    particleWorld.init();
     SUCCESS("Successfully initialized fluid!");
     return;
 }

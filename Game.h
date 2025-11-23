@@ -43,8 +43,8 @@ private:
     sf::View worldView;
 
     // 输入相关
-    sf::Vector2f mousePos;
-    sf::Vector2f lastmousePos;
+    sf::Vector2f mousePos = {0, 0};
+    sf::Vector2f lastmousePos = {0, 0};
     b2Vec2 worldPos = b2Vec2_zero;
 
     // 时间/FPS

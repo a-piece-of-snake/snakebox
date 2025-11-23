@@ -219,7 +219,6 @@ void Game::UpdateWorld()
     {
         b2World_Step(worldId, 1.0f / 15.f, 4);
         particleWorld.update();
-        particleWorld.groups[0].createParticle(worldId, worldPos);
     }
     return;
 }
