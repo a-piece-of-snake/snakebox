@@ -217,6 +217,7 @@ void Game::UpdateWorld()
 {
     if (!pause)
     {
+        particleWorld.groups[0].step(1.0f / 15.f);
         b2World_Step(worldId, 1.0f / 15.f, 4);
         particleWorld.update();
     }

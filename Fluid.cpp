@@ -63,10 +63,10 @@ void ParticleWorld::update()
         {
             Particle& particle = group.particles[i];
             particle.index = i;
-            particle.impulse = b2Vec2_zero;
+            particle.force = b2Vec2_zero;
             particle.pos = b2Body_GetPosition(particle.bodyId);
             particle.velocity = b2Body_GetLinearVelocity(particle.bodyId);
-            grids[getGridPos(particle.pos, group.config.radius * group.config.IMPACT, 50000)].push_back(&particle);
+            grids[getGridIndex(particle.pos, group.config.radius * group.config.IMPACT, 50000)].push_back(&particle);
         }
     }
 
@@ -77,5 +77,43 @@ void ParticleWorld::update()
             std::sort(
                 grid.begin(), grid.end(), [](const Particle* a, const Particle* b) { return a->index < b->index; });
         }
+    }
+}
+void ParticleGroup::step(float timestep)
+{
+    float cellSize = config.radius * config.IMPACT;
+    for (auto& p : particles)
+    {
+        auto gridPos = getGridPos(p.pos, cellSize);
+        std::vector<Particle*> others;
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                sf::Vector2i otherGridPos = {gridPos.x + i, gridPos.y + j};
+                for (auto& other : world->grids[getGridIndex(otherGridPos, 50000)])
+                {
+                    if (b2Length(p.pos - other->pos) <= cellSize)
+                    {
+                        others.push_back(other);
+                    }
+                }
+            }
+        }
+        for (auto& other : others)
+        {
+            b2Vec2 offect = p.pos - other->pos;
+            b2Vec2 dir = b2Normalize(offect);
+
+            b2Vec2 totalForce = dir * b2Length(offect) * 20;
+
+            other->force -= totalForce;
+            p.force += totalForce;
+        }
+    }
+    for (auto& p : particles)
+    {
+        // DEBUG("%f, %f", p.f  .x, p.impulse.y);
+        b2Body_ApplyForceToCenter(p.bodyId, p.force, true);
     }
 }

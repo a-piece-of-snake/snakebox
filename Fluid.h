@@ -40,7 +40,7 @@ struct Particle
     int index;
     b2Vec2 pos = b2Vec2_zero;
     b2Vec2 velocity = b2Vec2_zero;
-    b2Vec2 impulse = b2Vec2_zero;
+    b2Vec2 force = b2Vec2_zero;
     float mass = 1.f;
     b2BodyId bodyId;
     ParticleGroup* group;

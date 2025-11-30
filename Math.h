@@ -1,4 +1,5 @@
 #pragma once
+#include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 #include <cmath>
 #include <cstdint>
@@ -90,14 +91,26 @@ inline std::vector<std::vector<int>> triangulate(const std::vector<b2Vec2>& vert
 }
 
 
-inline int getGridPos(b2Vec2 pos, float cellSize, int gridSize)
+inline sf::Vector2i getGridPos(b2Vec2 pos, float cellSize)
+{
+    return {static_cast<int>(std::floor(pos.x / cellSize)), static_cast<int>(std::floor(pos.y / cellSize))};
+}
+inline int getGridIndex(b2Vec2 pos, float cellSize, int gridSize)
 {
     if (cellSize <= 0 || gridSize <= 0)
         return 0;
+    auto gridPos = getGridPos(pos, cellSize);
+    int ix = gridPos.x;
+    int iy = gridPos.y;
 
-    int ix = static_cast<int>(std::floor(pos.x / cellSize));
-    int iy = static_cast<int>(std::floor(pos.y / cellSize));
+    uint32_t hash = static_cast<uint32_t>(ix) * 2654435761U ^ static_cast<uint32_t>(iy) * 2246822519U;
 
+    return static_cast<int>(hash % static_cast<uint32_t>(gridSize));
+}
+inline int getGridIndex(sf::Vector2i gridPos, int gridSize)
+{
+    int ix = gridPos.x;
+    int iy = gridPos.y;
     uint32_t hash = static_cast<uint32_t>(ix) * 2654435761U ^ static_cast<uint32_t>(iy) * 2246822519U;
 
     return static_cast<int>(hash % static_cast<uint32_t>(gridSize));
