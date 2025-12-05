@@ -21,8 +21,8 @@ struct ParticleConfig
     float restitution = 0.01f;
     float IMPACT = 5.f;
     float MOMENTUM_COEFFICIENT = 1.f;
-    float FORCE_MULTIPLIER = 40000.f;
-    float FORCE_SURFACE = 50.f;
+    float FORCE_MULTIPLIER = 50000.f;
+    float FORCE_SURFACE = 25.f;
     float FORCE_ADHESION = 0.f;
     float SHEAR_VISCOSITY = 20.f;
     float VISCOSITY = 0.f;

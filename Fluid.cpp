@@ -1,4 +1,5 @@
 #include "Fluid.h"
+
 void ParticleGroup::createParticle(b2WorldId worldId, b2Vec2 pos)
 {
     b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -86,6 +87,9 @@ void ParticleGroup::step(float timestep)
     {
         auto gridPos = getGridPos(p.pos, cellSize);
         std::vector<Particle*> others;
+
+        b2Vec2 argPos = b2Vec2_zero;
+        float density = 0.f;
         for (int i = -1; i <= 1; i++)
         {
             for (int j = -1; j <= 1; j++)
@@ -93,9 +97,15 @@ void ParticleGroup::step(float timestep)
                 sf::Vector2i otherGridPos = {gridPos.x + i, gridPos.y + j};
                 for (auto& other : world->grids[getGridIndex(otherGridPos, 50000)])
                 {
-                    if (b2Length(p.pos - other->pos) <= cellSize)
+                    if (other->index != p.index)
                     {
-                        others.push_back(other);
+                        if (b2Length(p.pos - other->pos) <= cellSize)
+                        {
+                            float force = getForce(b2Length(p.pos - other->pos), cellSize);
+                            density += ((p.mass + other->mass) / 2) * force;
+                            others.push_back(other);
+                            argPos += other->pos;
+                        }
                     }
                 }
             }
@@ -104,12 +114,18 @@ void ParticleGroup::step(float timestep)
         {
             b2Vec2 offect = p.pos - other->pos;
             b2Vec2 dir = b2Normalize(offect);
+            float dist = b2Length(offect);
+            b2Vec2 repulsionForce =
+                (config.FORCE_MULTIPLIER) * dir * getForce(dist, cellSize) * (density * density * Q_sqrt(density));
 
-            b2Vec2 totalForce = dir * b2Length(offect) * 20;
+            b2Vec2 totalForce = repulsionForce;
 
             other->force -= totalForce;
             p.force += totalForce;
         }
+        if (others.size() != 0)
+            p.force += {(argPos.x / others.size() - p.pos.x) * config.FORCE_SURFACE,
+                        (argPos.y / others.size() - p.pos.y) * config.FORCE_SURFACE};
     }
     for (auto& p : particles)
     {

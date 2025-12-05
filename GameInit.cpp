@@ -139,7 +139,7 @@ void Game::InitScene()
 
 void Game::InitWindow()
 {
-    window.setFramerateLimit(60);
+    //window.setFramerateLimit(120);
     worldView.setSize(static_cast<sf::Vector2f>(window.getSize()));
     worldView.setCenter({worldView.getSize().x / 2, worldView.getSize().y / 2});
     worldView.rotate(sf::degrees(180));

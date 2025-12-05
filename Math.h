@@ -115,3 +115,35 @@ inline int getGridIndex(sf::Vector2i gridPos, int gridSize)
 
     return static_cast<int>(hash % static_cast<uint32_t>(gridSize));
 }
+
+
+inline float Q_rsqrt(const float& number)
+{ //Quake III Arena
+    long i;
+    float x2, y;
+    const float threehalfs = 1.5F;
+
+    x2 = number * 0.5F;
+    y = number;
+    i = *(long*)&y;            // evil floating point bit level hacking
+    i = 0x5f3759df - (i >> 1); // what the f***?
+    y = *(float*)&i;
+    y = y * (threehalfs - (x2 * y * y));
+    y = y * (threehalfs - (x2 * y * y));
+    return y;
+}
+
+inline float Q_sqrt(const float& x)
+{
+    return x * Q_rsqrt(x);
+}
+
+
+inline float getForce(float dist, float radius)
+{
+    if (dist >= radius)
+        return 0;
+    float x = radius - dist;
+    float radius_sq = radius * radius;
+    return x * x * Q_sqrt(x) / (B2_PI / 4.0f * radius_sq * radius_sq);
+}

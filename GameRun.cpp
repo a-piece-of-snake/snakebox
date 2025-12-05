@@ -13,6 +13,8 @@ void Game::Run()
 void Game::Update()
 {
     mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    lastMousePos = mousePos;
+    lastWorldPos = worldPos;
     worldPos = {mousePos.x, mousePos.y};
     if (fpsClock.getElapsedTime().asSeconds() >= 1.0f)
     {
@@ -76,11 +78,58 @@ void Game::ImGuiRelated()
 }
 void Game::KeyLogic()
 {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
+    {
+        static bool firstClick = true;
+
+        if (firstClick)
+        {
+            firstClick = false;
+        }
+        else
+        {
+            float dx = worldPos.x - lastWorldPos.x;
+            float dy = worldPos.y - lastWorldPos.y;
+            float distanceSq = dx * dx + dy * dy;
+
+            if (distanceSq > 0.0001f)
+            {
+                b2BodyDef bodyDef = b2DefaultBodyDef();
+                bodyDef.type = b2_staticBody;
+                b2Vec2 center = {(lastWorldPos.x + worldPos.x) / 2.f, (lastWorldPos.y + worldPos.y) / 2.f};
+                bodyDef.position = center;
+                b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
+
+                float length = sqrt(distanceSq);
+                float angle = atan2(dy, dx);
+
+                b2Polygon line = b2MakeBox(length / 2.f + 2.5f, 10.f);
+                b2ShapeDef shapeDef = b2DefaultShapeDef();
+                b2CreatePolygonShape(bodyId, &shapeDef, &line);
+
+                b2Body_SetTransform(bodyId, center, b2MakeRot(angle));
+
+                bodyIds.push_back(bodyId);
+            }
+        }
+    }
 }
 void Game::HandleEvent(const sf::Event& event)
 {
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
     {
+        if (keyPressed->scancode == sf::Keyboard::Scan::R)
+        {
+            for (auto& bodyId : bodyIds)
+            {
+                b2DestroyBody(bodyId);
+            }
+            bodyIds.clear();
+            for (auto& group : particleWorld.groups)
+            {
+                group.particles.clear();
+            }
+        }
         if (keyPressed->scancode == sf::Keyboard::Scan::Num1)
         {
             if (spawnableBrowser.selectedObject[0] != nullptr)

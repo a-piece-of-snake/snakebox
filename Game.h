@@ -44,8 +44,9 @@ private:
 
     // 输入相关
     sf::Vector2f mousePos = {0, 0};
-    sf::Vector2f lastmousePos = {0, 0};
+    sf::Vector2f lastMousePos = {0, 0};
     b2Vec2 worldPos = b2Vec2_zero;
+    b2Vec2 lastWorldPos = b2Vec2_zero;
 
     // 时间/FPS
     sf::Clock deltaClock;
