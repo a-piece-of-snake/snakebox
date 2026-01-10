@@ -1,66 +1,85 @@
 #include "Render.h"
-
-void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds)
+void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::Texture* texture)
 {
     sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
     sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
+
     for (const auto& bodyId : bodyIds)
     {
         int shapecount = b2Body_GetShapeCount(bodyId);
-        b2ShapeId shapeIds[shapecount];
-        b2Body_GetShapes(bodyId, shapeIds, shapecount);
+        std::vector<b2ShapeId> shapeIds(shapecount);
+        b2Body_GetShapes(bodyId, shapeIds.data(), shapecount);
         b2Vec2 pos = b2Body_GetPosition(bodyId);
         b2Rot rot = b2Body_GetRotation(bodyId);
         float angle = atan2(rot.s, rot.c);
         float cosAngle = cos(angle);
         float sinAngle = sin(angle);
+
         for (const auto& shapeId : shapeIds)
         {
             b2ShapeType shapeType = b2Shape_GetType(shapeId);
-            if (shapeType == b2_polygonShape) //这里可以用switch（应该把），只是我懒得做
+            if (shapeType == b2_polygonShape)
             {
                 b2Polygon shape = b2Shape_GetPolygon(shapeId);
-                std::vector<b2Vec2> poses;
+
+                float minX = FLT_MAX, maxX = -FLT_MAX;
+                float minY = FLT_MAX, maxY = -FLT_MAX;
+                for (int i = 0; i < shape.count; ++i)
+                {
+                    b2Vec2 v = shape.vertices[i];
+                    minX = std::min(minX, v.x);
+                    maxX = std::max(maxX, v.x);
+                    minY = std::min(minY, v.y);
+                    maxY = std::max(maxY, v.y);
+                }
+                float width = std::max(maxX - minX, 1e-5f);
+                float height = std::max(maxY - minY, 1e-5f);
 
                 std::vector<sf::Vertex> worldVertices;
-                for (int i = 0; i < shape.count; i++)
+                for (int i = 0; i < shape.count; ++i)
                 {
-                    poses.push_back(shape.vertices[i]);
-                    b2Vec2 localVertex = shape.vertices[i];
-                    float rotatedX = localVertex.x * cosAngle - localVertex.y * sinAngle;
-                    float rotatedY = localVertex.x * sinAngle + localVertex.y * cosAngle;
-                    float screenX = pos.x + rotatedX;
-                    float screenY = pos.y + rotatedY;
-                    worldVertices.emplace_back(sf::Vector2f(screenX, screenY), Colors::b2BodyOutline);
-                }
+                    b2Vec2 local = shape.vertices[i];
 
-                for (int i = 0; i < shape.count; i++)
-                {
-                    outlineVertexArray.append(worldVertices[i]);
-                    outlineVertexArray.append(worldVertices[(i + 1) % shape.count]);
-                }
+                    float wx = pos.x + local.x * cosAngle - local.y * sinAngle;
+                    float wy = pos.y + local.x * sinAngle + local.y * cosAngle;
 
-                auto triangles = triangulate(poses);
-                for (const auto& triangle : triangles)
-                {
-                    for (int i = 0; i < 3; i++)
+                    sf::Vertex v;
+                    v.position = sf::Vector2f(wx, wy);
+
+                    if (texture)
                     {
-                        int vertexIndex = triangle[i];
-                        if (vertexIndex >= static_cast<int>(poses.size()))
-                            continue;
+                        float u = (local.x - minX) / width;
+                        float v_uv = (local.y - minY) / height;
+                        v.texCoords = sf::Vector2f(u * texture->getSize().x, v_uv * texture->getSize().y);
+                    }
+                    else
+                    {
+                        v.color = Colors::b2Body;
+                    }
+                    worldVertices.push_back(v);
+                }
 
-                        b2Vec2 localVertex = poses[vertexIndex];
+                for (int i = 0; i < shape.count; ++i)
+                {
+                    sf::Vertex v1 = worldVertices[i];
+                    sf::Vertex v2 = worldVertices[(i + 1) % shape.count];
+                    if (!texture)
+                    {
+                        v1.color = v2.color = Colors::b2BodyOutline;
+                    }
+                    outlineVertexArray.append(v1);
+                    outlineVertexArray.append(v2);
+                }
 
-                        float rotatedX = localVertex.x * cosAngle - localVertex.y * sinAngle;
-                        float rotatedY = localVertex.x * sinAngle + localVertex.y * cosAngle;
-
-                        float screenX = pos.x + rotatedX;
-                        float screenY = pos.y + rotatedY;
-
-                        sf::Vertex vertex;
-                        vertex.position = {screenX, screenY};
-                        vertex.color = Colors::b2Body;
-                        shapeVertexArray.append(vertex);
+                auto triangles = triangulate(std::vector<b2Vec2>(shape.vertices, shape.vertices + shape.count));
+                for (const auto& tri : triangles)
+                {
+                    for (int idx : tri)
+                    {
+                        if (idx >= 0 && idx < static_cast<int>(worldVertices.size()))
+                        {
+                            shapeVertexArray.append(worldVertices[idx]);
+                        }
                     }
                 }
             }
@@ -68,38 +87,86 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds)
             {
                 static const int EDGES = 16;
                 b2Circle shape = b2Shape_GetCircle(shapeId);
+                b2Vec2 center = shape.center;
                 float r = shape.radius;
 
+                float minX = center.x - r, maxX = center.x + r;
+                float minY = center.y - r, maxY = center.y + r;
+                float width = 2 * r, height = 2 * r;
 
-                b2Vec2 localCenter = shape.center;
-                b2Vec2 worldCenter = {pos.x + localCenter.x * cosAngle - localCenter.y * sinAngle,
-                                      pos.y + localCenter.x * sinAngle + localCenter.y * cosAngle};
+                float cx = pos.x + center.x * cosAngle - center.y * sinAngle;
+                float cy = pos.y + center.x * sinAngle + center.y * cosAngle;
+
                 for (int i = 0; i < EDGES; ++i)
                 {
                     float a1 = 2.0f * B2_PI * i / EDGES;
                     float a2 = 2.0f * B2_PI * (i + 1) / EDGES;
 
-                    b2Vec2 v1 = {worldCenter.x + r * cos(a1), worldCenter.y + r * sin(a1)};
-                    b2Vec2 v2 = {worldCenter.x + r * cos(a2), worldCenter.y + r * sin(a2)};
-                    shapeVertexArray.append(sf::Vertex({worldCenter.x, worldCenter.y}, Colors::b2Body));
-                    shapeVertexArray.append(sf::Vertex({v1.x, v1.y}, Colors::b2Body));
-                    shapeVertexArray.append(sf::Vertex({v2.x, v2.y}, Colors::b2Body));
-                    outlineVertexArray.append(sf::Vertex({v1.x, v1.y}, Colors::b2BodyOutline));
-                    outlineVertexArray.append(sf::Vertex({v2.x, v2.y}, Colors::b2BodyOutline));
+                    b2Vec2 local1 = {center.x + r * cos(a1), center.y + r * sin(a1)};
+                    b2Vec2 local2 = {center.x + r * cos(a2), center.y + r * sin(a2)};
+
+                    b2Vec2 w1 = {pos.x + local1.x * cosAngle - local1.y * sinAngle,
+                                 pos.y + local1.x * sinAngle + local1.y * cosAngle};
+                    b2Vec2 w2 = {pos.x + local2.x * cosAngle - local2.y * sinAngle,
+                                 pos.y + local2.x * sinAngle + local2.y * cosAngle};
+
+                    sf::Vertex centerV, v1, v2;
+                    centerV.position = sf::Vector2f(cx, cy);
+                    v1.position = sf::Vector2f(w1.x, w1.y);
+                    v2.position = sf::Vector2f(w2.x, w2.y);
+
+                    if (texture)
+                    {
+                        float u_center = (center.x - minX) / width;
+                        float v_center = (center.y - minY) / height;
+                        centerV.texCoords =
+                            sf::Vector2f(u_center * texture->getSize().x, v_center * texture->getSize().y);
+
+                        float u1 = (local1.x - minX) / width;
+                        float v1_uv = (local1.y - minY) / height;
+                        float u2 = (local2.x - minX) / width;
+                        float v2_uv = (local2.y - minY) / height;
+
+                        v1.texCoords = sf::Vector2f(u1 * texture->getSize().x, v1_uv * texture->getSize().y);
+                        v2.texCoords = sf::Vector2f(u2 * texture->getSize().x, v2_uv * texture->getSize().y);
+                    }
+                    else
+                    {
+                        centerV.color = v1.color = v2.color = Colors::b2Body;
+                    }
+
+                    shapeVertexArray.append(centerV);
+                    shapeVertexArray.append(v1);
+                    shapeVertexArray.append(v2);
+
+                    if (!texture)
+                    {
+                        v1.color = v2.color = Colors::b2BodyOutline;
+                    }
+                    outlineVertexArray.append(v1);
+                    outlineVertexArray.append(v2);
                 }
+
                 float indicatorLength = r * 0.8f;
-                b2Vec2 tip = {worldCenter.x + indicatorLength * cos(angle),
-                              worldCenter.y + indicatorLength * sin(angle)};
-                outlineVertexArray.append(sf::Vertex({worldCenter.x, worldCenter.y}, Colors::b2BodyOutline));
-                outlineVertexArray.append(sf::Vertex({tip.x, tip.y}, Colors::b2BodyOutline));
-            }
-            else
-            {
-                ERROR("Unknow box2d type!");
+                b2Vec2 tipLocal = {center.x + indicatorLength * cos(angle), center.y + indicatorLength * sin(angle)};
+                b2Vec2 tipWorld = {pos.x + tipLocal.x * cosAngle - tipLocal.y * sinAngle,
+                                   pos.y + tipLocal.x * sinAngle + tipLocal.y * cosAngle};
+                outlineVertexArray.append(sf::Vertex(sf::Vector2f(cx, cy), Colors::b2BodyOutline));
+                outlineVertexArray.append(sf::Vertex(sf::Vector2f(tipWorld.x, tipWorld.y), Colors::b2BodyOutline));
             }
         }
     }
-    window.draw(shapeVertexArray);
+
+    if (texture)
+    {
+        sf::RenderStates states;
+        states.texture = texture;
+        window.draw(shapeVertexArray, states);
+    }
+    else
+    {
+        window.draw(shapeVertexArray);
+    }
     window.draw(outlineVertexArray);
 }
 void drawFluid(sf::RenderWindow& window, const ParticleWorld& particleWorld)

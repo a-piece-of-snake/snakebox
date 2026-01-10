@@ -110,11 +110,11 @@ void Game::InitImGui()
 void Game::InitScene()
 {
     b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = (b2Vec2){0.0f, -10.0f};
+    worldDef.gravity = (b2Vec2){0.0f, 10.0f};
     worldId = b2CreateWorld(&worldDef);
 
     b2BodyDef groundBodyDef = b2DefaultBodyDef();
-    groundBodyDef.position = (b2Vec2){500.0f, 130.0f};
+    groundBodyDef.position = (b2Vec2){500.0f, 730.0f};
     b2BodyId groundId = b2CreateBody(worldId, &groundBodyDef);
     b2Polygon groundBox = b2MakeBox(2000.0f, 20.0f);
     b2ShapeDef groundShapeDef = b2DefaultShapeDef();
@@ -123,7 +123,7 @@ void Game::InitScene()
 
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
-    bodyDef.position = (b2Vec2){200.0f, 154.0f};
+    bodyDef.position = (b2Vec2){200.0f, 715.0f};
     b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
     b2Polygon dynamicBox = b2MakeBox(10.0f, 10.0f);
     b2ShapeDef shapeDef = b2DefaultShapeDef();
@@ -142,15 +142,19 @@ void Game::InitWindow()
     //window.setFramerateLimit(120);
     worldView.setSize(static_cast<sf::Vector2f>(window.getSize()));
     worldView.setCenter({worldView.getSize().x / 2, worldView.getSize().y / 2});
-    worldView.rotate(sf::degrees(180));
+    uiView.setSize(static_cast<sf::Vector2f>(window.getSize()));
+    uiView.setCenter({uiView.getSize().x / 2, uiView.getSize().y / 2});
+    //worldView.rotate(sf::degrees(180));
     SUCCESS("Successfully initialized window!");
     return;
 }
 
 void Game::InitResources()
 {
+    textureManager.init();
     textureManager.get("snake.png"); //Si si si
     textureManager.get("sheep.png");
+    shaderManager.get("noise").get();
     {
         SpawnableObject box;
         box.name = "Box";

@@ -12,6 +12,7 @@
             "browse": {
                 "path": [
                     "${workspaceRoot}",
+                    "/usr/lib/**",
                     "/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/lib/",
                     "/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/buildR/bin"
                 ]

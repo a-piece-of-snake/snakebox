@@ -98,47 +98,25 @@ struct SpawnableObjectBrowser
 
                         ImGui::EndTooltip();
                     }
-                    if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1))
+                    static const ImGuiKey numKeys[] = {ImGuiKey_1,
+                                                       ImGuiKey_2,
+                                                       ImGuiKey_3,
+                                                       ImGuiKey_4,
+                                                       ImGuiKey_5,
+                                                       ImGuiKey_6,
+                                                       ImGuiKey_7,
+                                                       ImGuiKey_8,
+                                                       ImGuiKey_9,
+                                                       ImGuiKey_0};
+                    for (int i = 0; i < 10; ++i)
                     {
-                        selectedObject[0] = &obj;
+                        if (ImGui::IsKeyPressed(numKeys[i]))
+                        {
+                            selectedObject[i] = &obj;
+                            break;
+                        }
                     }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_2))
-                    {
-                        selectedObject[1] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_3))
-                    {
-                        selectedObject[2] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_4))
-                    {
-                        selectedObject[3] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_5))
-                    {
-                        selectedObject[4] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_6))
-                    {
-                        selectedObject[5] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_7))
-                    {
-                        selectedObject[6] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_8))
-                    {
-                        selectedObject[7] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_9))
-                    {
-                        selectedObject[8] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_0))
-                    {
-                        selectedObject[9] = &obj;
-                    }
-                    else if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_LeftShift))
+                    if (ImGui::IsKeyPressed(ImGuiKey_LeftShift))
                     {
                         selectedObject[10] = &obj;
                     }
