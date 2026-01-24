@@ -1,19 +1,35 @@
 #include "Resources.h"
 
-void TextureManager::init()
+void TextureManager::init(SDL_Renderer* renderer)
 {
-    sf::Image image({2, 2}, sf::Color::Black);
-    image.setPixel({0, 0}, sf::Color::Magenta);
-    image.setPixel({1, 1}, sf::Color::Magenta);
-    image.setPixel({0, 1}, sf::Color::Black);
-    image.setPixel({1, 0}, sf::Color::Black);
-    auto tex = std::make_shared<sf::Texture>();
-    if (!tex->loadFromImage(image))
-        ERROR("Failed to init texture manager!");
-    null = tex;
+    SDL_Surface* surface = SDL_CreateSurface(2, 2, SDL_PIXELFORMAT_RGBA8888);
+    SDL_LockSurface(surface);
+
+    uint32_t* pixels = (uint32_t*)surface->pixels;
+
+    int pitch_pixels = surface->pitch / 4;
+    const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(surface->format);
+    uint32_t magenta = SDL_MapRGBA(details, NULL, 255, 0, 255, 255);
+    uint32_t black = SDL_MapRGBA(details, NULL, 0, 0, 0, 255);
+
+    pixels[0 * pitch_pixels + 0] = magenta; // (0, 0)
+    pixels[1 * pitch_pixels + 1] = magenta; // (1, 1)
+    pixels[1 * pitch_pixels + 0] = black;   // (0, 1)
+    pixels[0 * pitch_pixels + 1] = black;   // (1, 0)
+
+    SDL_UnlockSurface(surface);
+    SDL_Texture* rawTex = SDL_CreateTextureFromSurface(renderer, surface);
+
+    if (!rawTex)
+    {
+        ERROR("Failed to create texture: %s", SDL_GetError());
+    }
+
+    null = std::shared_ptr<SDL_Texture>(rawTex, SDL_DestroyTexture);
+    SDL_DestroySurface(surface);
 }
 
-std::shared_ptr<sf::Texture> TextureManager::get(const std::string& name)
+std::shared_ptr<SDL_Texture> TextureManager::get(SDL_Renderer* renderer, const std::string& name)
 {
     auto it = cache.find(name);
     if (it != cache.end())
@@ -22,76 +38,26 @@ std::shared_ptr<sf::Texture> TextureManager::get(const std::string& name)
     }
 
     std::string path = "Assets/Textures/" + name;
-    auto tex = std::make_shared<sf::Texture>();
-    if (!tex->loadFromFile(path))
+    SDL_Surface* surface = IMG_Load(path.c_str());
+    if (!surface)
     {
-        ERROR("Failed to load texture: {%s}", path.c_str());
+        ERROR("Failed to load texture surface: %s", path.c_str());
         return null;
     }
 
+    SDL_Texture* rawTex = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!rawTex)
+    {
+        ERROR("Failed to create texture: %s", SDL_GetError());
+    }
+    std::shared_ptr<SDL_Texture> tex(rawTex, SDL_DestroyTexture);
+    SDL_DestroySurface(surface);
     cache[name] = tex;
     SUCCESS("Loaded texture: {%s}", path.c_str());
     return tex;
 }
 
 void TextureManager::clear()
-{
-    cache.clear();
-}
-
-std::shared_ptr<sf::Shader> ShaderManager::get(const std::string& name)
-{
-    auto it = cache.find(name);
-    if (it != cache.end())
-    {
-        return it->second;
-    }
-
-    std::string path = "Assets/Shaders/" + name;
-    std::string fragPath = path + "Frag.glsl";
-    std::string geoPath = path + "Geo.glsl";
-    std::string vertPath = path + "Vert.glsl";
-    auto shader = std::make_shared<sf::Shader>();
-    if (std::filesystem::exists(fragPath))
-    {
-        if (!shader->loadFromFile(fragPath, sf::Shader::Type::Fragment))
-        {
-            ERROR("Failed to load fragment shader : {%s}", fragPath.c_str());
-        }
-    }
-    else
-    {
-        WARN("Fragment shader: {%s} not found", fragPath.c_str());
-    }
-    if (std::filesystem::exists(geoPath))
-    {
-        if (!shader->loadFromFile(geoPath, sf::Shader::Type::Geometry))
-        {
-            ERROR("Failed to load geometry shader : {%s}", geoPath.c_str());
-        }
-    }
-    else
-    {
-        WARN("Geometry shader: {%s} not found", geoPath.c_str());
-    }
-    if (std::filesystem::exists(vertPath))
-    {
-        if (!shader->loadFromFile(vertPath, sf::Shader::Type::Vertex))
-        {
-            ERROR("Failed to load vertex shader : {%s}", vertPath.c_str());
-        }
-    }
-    else
-    {
-        WARN("Vertex shader: {%s} not found", vertPath.c_str());
-    }
-
-    cache[name] = shader;
-    SUCCESS("Loaded shader: {%s}", name.c_str());
-    return shader;
-}
-
-void ShaderManager::clear()
 {
     cache.clear();
 }

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <chrono>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -12,20 +11,11 @@
 class TextureManager
 {
 private:
-    std::unordered_map<std::string, std::shared_ptr<sf::Texture>> cache;
-    std::shared_ptr<sf::Texture> null;
+    std::unordered_map<std::string, std::shared_ptr<SDL_Texture>> cache;
+    std::shared_ptr<SDL_Texture> null;
 
 public:
-    void init();
-    std::shared_ptr<sf::Texture> get(const std::string& name);
-    void clear();
-};
-class ShaderManager
-{
-private:
-    std::unordered_map<std::string, std::shared_ptr<sf::Shader>> cache;
-
-public:
-    std::shared_ptr<sf::Shader> get(const std::string& name);
+    void init(SDL_Renderer* renderer);
+    std::shared_ptr<SDL_Texture> get(SDL_Renderer* renderer, const std::string& name);
     void clear();
 };

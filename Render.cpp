@@ -1,9 +1,32 @@
 #include "Render.h"
-void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::Texture* texture)
-{
-    sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
-    sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
 
+#include <algorithm>
+
+#include "Math.h"
+
+const float WIDTH = 1;
+static std::vector<SDL_Vertex> shapeVertices;
+static std::vector<SDL_Vertex> outlineVertices;
+
+void makeLine(
+    std::vector<SDL_Vertex>* vertexs, const SDL_FPoint& a, const SDL_FPoint& b, float width, const SDL_FColor& fcolor)
+{
+    auto [p1, p2, p3, p4] = getLine(a, b, width);
+
+    vertexs->emplace_back(SDL_Vertex{p1, fcolor});
+    vertexs->emplace_back(SDL_Vertex{p2, fcolor});
+    vertexs->emplace_back(SDL_Vertex{p3, fcolor});
+
+    vertexs->emplace_back(SDL_Vertex{p2, fcolor});
+    vertexs->emplace_back(SDL_Vertex{p3, fcolor});
+    vertexs->emplace_back(SDL_Vertex{p4, fcolor});
+}
+void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Texture* texture)
+{
+    shapeVertices.clear();
+    outlineVertices.clear();
+    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
+    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
     for (const auto& bodyId : bodyIds)
     {
         int shapecount = b2Body_GetShapeCount(bodyId);
@@ -11,10 +34,11 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
         b2Body_GetShapes(bodyId, shapeIds.data(), shapecount);
         b2Vec2 pos = b2Body_GetPosition(bodyId);
         b2Rot rot = b2Body_GetRotation(bodyId);
-        float angle = atan2(rot.s, rot.c);
-        float cosAngle = cos(angle);
-        float sinAngle = sin(angle);
-
+        // float angle = atan2(rot.s, rot.c);
+        // float cosAngle = cos(angle);
+        // float sinAngle = sin(angle);
+        float cosAngle = rot.c;
+        float sinAngle = rot.s;
         for (const auto& shapeId : shapeIds)
         {
             b2ShapeType shapeType = b2Shape_GetType(shapeId);
@@ -35,7 +59,7 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
                 float width = std::max(maxX - minX, 1e-5f);
                 float height = std::max(maxY - minY, 1e-5f);
 
-                std::vector<sf::Vertex> worldVertices;
+                std::vector<SDL_Vertex> worldVertices;
                 for (int i = 0; i < shape.count; ++i)
                 {
                     b2Vec2 local = shape.vertices[i];
@@ -43,14 +67,14 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
                     float wx = pos.x + local.x * cosAngle - local.y * sinAngle;
                     float wy = pos.y + local.x * sinAngle + local.y * cosAngle;
 
-                    sf::Vertex v;
-                    v.position = sf::Vector2f(wx, wy);
+                    SDL_Vertex v;
+                    v.position = SDL_FPoint{wx, wy};
 
                     if (texture)
                     {
                         float u = (local.x - minX) / width;
                         float v_uv = (local.y - minY) / height;
-                        v.texCoords = sf::Vector2f(u * texture->getSize().x, v_uv * texture->getSize().y);
+                        v.tex_coord = SDL_FPoint{u * texture->h, v_uv * texture->w};
                     }
                     else
                     {
@@ -61,14 +85,11 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
 
                 for (int i = 0; i < shape.count; ++i)
                 {
-                    sf::Vertex v1 = worldVertices[i];
-                    sf::Vertex v2 = worldVertices[(i + 1) % shape.count];
-                    if (!texture)
-                    {
-                        v1.color = v2.color = Colors::b2BodyOutline;
-                    }
-                    outlineVertexArray.append(v1);
-                    outlineVertexArray.append(v2);
+                    makeLine(&outlineVertices,
+                             worldVertices[i].position,
+                             worldVertices[(i + 1) % shape.count].position,
+                             WIDTH,
+                             outlineColor);
                 }
 
                 auto triangles = triangulate(std::vector<b2Vec2>(shape.vertices, shape.vertices + shape.count));
@@ -78,7 +99,7 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
                     {
                         if (idx >= 0 && idx < static_cast<int>(worldVertices.size()))
                         {
-                            shapeVertexArray.append(worldVertices[idx]);
+                            shapeVertices.push_back(worldVertices[idx]);
                         }
                     }
                 }
@@ -110,70 +131,61 @@ void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::
                     b2Vec2 w2 = {pos.x + local2.x * cosAngle - local2.y * sinAngle,
                                  pos.y + local2.x * sinAngle + local2.y * cosAngle};
 
-                    sf::Vertex centerV, v1, v2;
-                    centerV.position = sf::Vector2f(cx, cy);
-                    v1.position = sf::Vector2f(w1.x, w1.y);
-                    v2.position = sf::Vector2f(w2.x, w2.y);
+                    SDL_Vertex centerV, v1, v2;
+                    centerV.position = SDL_FPoint{cx, cy};
+                    v1.position = SDL_FPoint{w1.x, w1.y};
+                    v2.position = SDL_FPoint{w2.x, w2.y};
 
                     if (texture)
                     {
                         float u_center = (center.x - minX) / width;
                         float v_center = (center.y - minY) / height;
-                        centerV.texCoords =
-                            sf::Vector2f(u_center * texture->getSize().x, v_center * texture->getSize().y);
+                        centerV.tex_coord = SDL_FPoint{u_center * texture->h, v_center * texture->w};
 
                         float u1 = (local1.x - minX) / width;
                         float v1_uv = (local1.y - minY) / height;
                         float u2 = (local2.x - minX) / width;
                         float v2_uv = (local2.y - minY) / height;
 
-                        v1.texCoords = sf::Vector2f(u1 * texture->getSize().x, v1_uv * texture->getSize().y);
-                        v2.texCoords = sf::Vector2f(u2 * texture->getSize().x, v2_uv * texture->getSize().y);
+                        v1.tex_coord = SDL_FPoint{u1 * texture->h, v1_uv * texture->w};
+                        v2.tex_coord = SDL_FPoint{u2 * texture->h, v2_uv * texture->w};
                     }
                     else
                     {
                         centerV.color = v1.color = v2.color = Colors::b2Body;
                     }
 
-                    shapeVertexArray.append(centerV);
-                    shapeVertexArray.append(v1);
-                    shapeVertexArray.append(v2);
-
-                    if (!texture)
-                    {
-                        v1.color = v2.color = Colors::b2BodyOutline;
-                    }
-                    outlineVertexArray.append(v1);
-                    outlineVertexArray.append(v2);
+                    shapeVertices.push_back(centerV);
+                    shapeVertices.push_back(v1);
+                    shapeVertices.push_back(v2);
+                    makeLine(&outlineVertices, v1.position, v2.position, WIDTH, outlineColor);
                 }
 
                 float indicatorLength = r * 0.8f;
-                b2Vec2 tipLocal = {center.x + indicatorLength * cos(angle), center.y + indicatorLength * sin(angle)};
+                b2Vec2 tipLocal = {center.x + indicatorLength * cosAngle, center.y + indicatorLength * sinAngle};
                 b2Vec2 tipWorld = {pos.x + tipLocal.x * cosAngle - tipLocal.y * sinAngle,
                                    pos.y + tipLocal.x * sinAngle + tipLocal.y * cosAngle};
-                outlineVertexArray.append(sf::Vertex(sf::Vector2f(cx, cy), Colors::b2BodyOutline));
-                outlineVertexArray.append(sf::Vertex(sf::Vector2f(tipWorld.x, tipWorld.y), Colors::b2BodyOutline));
+                makeLine(&outlineVertices, {cx, cy}, {tipWorld.x, tipWorld.y}, WIDTH, outlineColor);
             }
         }
     }
 
-    if (texture)
-    {
-        sf::RenderStates states;
-        states.texture = texture;
-        window.draw(shapeVertexArray, states);
-    }
-    else
-    {
-        window.draw(shapeVertexArray);
-    }
-    window.draw(outlineVertexArray);
+    SDL_RenderGeometry(renderer, texture, shapeVertices.data(), shapeVertices.size(), nullptr, 0);
+    SDL_RenderGeometry(renderer, nullptr, outlineVertices.data(), outlineVertices.size(), nullptr, 0);
+    return;
 }
-void drawFluid(sf::RenderWindow& window, const ParticleWorld& particleWorld)
+void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld)
 {
+    size_t totalParticles = 0;
+    for (const auto& g : particleWorld.groups)
+        totalParticles += g.particles.size();
+    shapeVertices.clear();
+    shapeVertices.reserve(totalParticles * 3);
+    outlineVertices.clear();
+    outlineVertices.reserve(totalParticles * 18);
+    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
+    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
     static const b2Vec2 offect[3] = {{1, 0}, {-1, 1}, {-1, -1}};
-    sf::VertexArray shapeVertexArray(sf::PrimitiveType::Triangles);
-    sf::VertexArray outlineVertexArray(sf::PrimitiveType::Lines);
     for (const ParticleGroup& group : particleWorld.groups)
     {
         float radius = group.config.radius;
@@ -182,17 +194,15 @@ void drawFluid(sf::RenderWindow& window, const ParticleWorld& particleWorld)
             b2Vec2 pos1 = particle.pos + offect[0] * radius;
             b2Vec2 pos2 = particle.pos + offect[1] * radius;
             b2Vec2 pos3 = particle.pos + offect[2] * radius;
-            shapeVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2Body));
-            shapeVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2Body));
-            shapeVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2Body));
-            outlineVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2BodyOutline));
-            outlineVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2BodyOutline));
-            outlineVertexArray.append(sf::Vertex({pos2.x, pos2.y}, Colors::b2BodyOutline));
-            outlineVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2BodyOutline));
-            outlineVertexArray.append(sf::Vertex({pos3.x, pos3.y}, Colors::b2BodyOutline));
-            outlineVertexArray.append(sf::Vertex({pos1.x, pos1.y}, Colors::b2BodyOutline));
+            shapeVertices.emplace_back(SDL_FPoint{pos1.x, pos1.y}, Colors::b2Body, SDL_FPoint{0, 0});
+            shapeVertices.emplace_back(SDL_FPoint{pos2.x, pos2.y}, Colors::b2Body, SDL_FPoint{0, 0});
+            shapeVertices.emplace_back(SDL_FPoint{pos3.x, pos3.y}, Colors::b2Body, SDL_FPoint{0, 0});
+            makeLine(&outlineVertices, {pos1.x, pos1.y}, {pos2.x, pos2.y}, WIDTH, outlineColor);
+            makeLine(&outlineVertices, {pos2.x, pos2.y}, {pos3.x, pos3.y}, WIDTH, outlineColor);
+            makeLine(&outlineVertices, {pos3.x, pos3.y}, {pos1.x, pos1.y}, WIDTH, outlineColor);
         }
     }
-    window.draw(shapeVertexArray);
-    window.draw(outlineVertexArray);
+    SDL_RenderGeometry(renderer, nullptr, shapeVertices.data(), shapeVertices.size(), nullptr, 0);
+    SDL_RenderGeometry(renderer, nullptr, outlineVertices.data(), outlineVertices.size(), nullptr, 0);
+    return;
 }

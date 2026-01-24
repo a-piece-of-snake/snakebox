@@ -5,6 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceRoot}",
+                "/usr/include/SDL3",
+                "/usr/include/SDL3_image",
                 "/usr/include/**",
                 "/home/snake/code/cpp/LIBS/SFML/SFML-3.0.2/include/",
                 "/home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include/"
@@ -21,7 +23,7 @@
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c23",
             "cppStandard": "gnu++23",
-            "intelliSenseMode": "linux-gcc-x64",
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

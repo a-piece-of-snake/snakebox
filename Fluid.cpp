@@ -6,7 +6,7 @@ void ParticleGroup::createParticle(b2WorldId worldId, b2Vec2 pos)
     bodyDef.type = b2_dynamicBody;
     bodyDef.position = pos;
     // DEBUG("pos: %f, %f", bodyDef.position.x, bodyDef.position.y);
-    bodyDef.motionLocks.angularZ = true;
+    bodyDef.fixedRotation = true;
     b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
     b2Circle dynamicCircle;
     dynamicCircle.radius = config.radius;
@@ -94,7 +94,7 @@ void ParticleGroup::step(float timestep)
         {
             for (int j = -1; j <= 1; j++)
             {
-                sf::Vector2i otherGridPos = {gridPos.x + i, gridPos.y + j};
+                SDL_Point otherGridPos = {gridPos.x + i, gridPos.y + j};
                 for (auto& other : world->grids[getGridIndex(otherGridPos, 50000)])
                 {
                     if (other->index != p.index)

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include <SDL3/SDL.h>
 #include <box2d/box2d.h>
 #include <functional>
+#include <string>
 #include <vector>
 
 #include "ColorfulLog.h"
@@ -51,7 +52,7 @@ class ParticleGroup
 public:
     ParticleWorld* world;
     ParticleConfig config;
-    sf::Color color = sf::Color::White;
+    SDL_Color color = {0, 0, 0};
     std::vector<Particle> particles;
     /*
     std::vector<b2Vec2> p_pos;

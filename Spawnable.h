@@ -1,21 +1,23 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+struct SDL_Texture;
+
 #include <box2d/box2d.h>
 #include <functional>
+#include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_sdlrenderer3.h>
 #include <string>
 #include <vector>
 
 #include "ColorfulLog.h"
-#include "imgui/imgui-SFML.h"
-#include "imgui/imgui.h"
 
 struct SpawnableObject
 {
     std::string name;
     std::string type;
     std::string describe;
-    sf::Texture icon;
+    SDL_Texture* icon;
     unsigned int ID;
     std::function<bool(b2Vec2 pos, float size, float friction, float restitution)> onSpawned;
     bool spawn(b2Vec2 pos, float size, float friction, float restitution)

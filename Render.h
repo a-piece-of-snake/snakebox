@@ -1,8 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
+#include <SDL3/SDL.h>
 #include <box2d/box2d.h>
 #include <cmath>
 
@@ -13,9 +11,10 @@
 
 namespace Colors
 {
-constexpr sf::Color b2Body = sf::Color{255, 255, 255, 127};
-constexpr sf::Color b2BodyOutline = sf::Color{255, 255, 255, 255};
+constexpr SDL_FColor b2Body = SDL_FColor{0.55f, 0.66f, 0.64f, 0.5f};
+constexpr SDL_FColor b2BodyOutline = SDL_FColor{0.82f, 0.53f, 0.64f, 1.0f};
+constexpr SDL_FColor b2Joint = SDL_FColor{0.69f, 0.55f, 0.70f, 1.0f};
 } // namespace Colors
 
-void drawB2(sf::RenderWindow& window, const std::vector<b2BodyId>& bodyIds, sf::Texture* texture = nullptr);
-void drawFluid(sf::RenderWindow& window, const ParticleWorld& particleWorld);
+void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Texture* texture = nullptr);
+void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld);

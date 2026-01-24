@@ -1,16 +1,33 @@
 #include "Game.h"
 
-
-Game::Game() : window(sf::VideoMode(sf::Vector2u(width, height)), "CppProject", sf::Style::Default)
+Game::Game()
 {
-}
+    window = nullptr;
+    renderer = nullptr;
+    running = true;
+    worldZoom = 1.0f;
+    worldId = b2_nullWorldId;
+    mouseJointId = b2_nullJointId;
+    mouseBodyId = b2_nullBodyId;
 
+    // 初始化其他成员变量（根据你的 Game.h）
+    tickCount = 0;
+    pause = false;
+    particleCount = 0;
+}
 Game::~Game()
 {
+    Destroy();
 }
 
 void Game::Init()
 {
+    if (isInitialized)
+    {
+        WARN("Dont init twice!");
+        return;
+    }
+    isInitialized = true;
     try
     {
         std::locale loc("zh_CN.UTF-8");
@@ -30,25 +47,22 @@ void Game::Init()
 
     InitScene();
 
-    SUCCESS("Successfully initialized the game!");
+    SUCCESS("Successfully init the game!");
     return;
 }
 void Game::InitImGui()
 {
-    if (!ImGui::SFML::Init(window))
-        ERROR("Failed to initialized Imgui!");
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.Fonts->Clear();
 
     io.Fonts->AddFontFromFileTTF(
         "Assets/Fonts/NanoDyongSong.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
-
-    if (!ImGui::SFML::UpdateFontTexture())
-        ERROR("Failed to load font!");
-
-
     ImGui::GetStyle().ChildRounding = 12;
     ImGui::GetStyle().WindowRounding = 12;
     ImGui::GetStyle().FrameRounding = 12;
@@ -64,45 +78,92 @@ void Game::InitImGui()
 
     ImVec4* colors = ImGui::GetStyle().Colors;
 
-    colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.51f, 0.51f, 0.70f);
-    colors[ImGuiCol_Text] = ImVec4(0.85f, 0.51f, 0.51f, 1.00f);
-    colors[ImGuiCol_TextDisabled] = ImVec4(0.65f, 0.45f, 0.45f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.89f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.71f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.77f);
-    colors[ImGuiCol_Border] = ImVec4(1.00f, 0.75f, 0.75f, 0.34f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.46f, 0.25f, 0.25f, 0.50f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 0.75f, 0.75f, 0.39f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.29f, 0.29f, 0.47f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.78f, 0.32f, 0.36f, 0.34f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.88f, 0.42f, 0.46f, 0.34f);
-    colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.62f, 0.85f, 1.00f);
-    colors[ImGuiCol_TextLink] = ImVec4(0.93f, 0.50f, 0.96f, 1.00f);
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.93f, 0.70f, 0.70f, 0.40f);
-    colors[ImGuiCol_TreeLines] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
-    colors[ImGuiCol_NavCursor] = ImVec4(0.98f, 0.33f, 0.26f, 1.00f);
-    colors[ImGuiCol_SliderGrab] = ImVec4(0.84f, 0.40f, 0.40f, 1.00f);
-    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.79f, 0.33f, 0.33f, 1.00f);
-    colors[ImGuiCol_Button] = ImVec4(0.98f, 0.26f, 0.26f, 0.40f);
-    colors[ImGuiCol_ButtonHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    colors[ImGuiCol_ButtonActive] = ImVec4(0.94f, 0.20f, 0.20f, 0.89f);
-    colors[ImGuiCol_Header] = ImVec4(0.98f, 0.26f, 0.26f, 0.31f);
-    colors[ImGuiCol_HeaderHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    colors[ImGuiCol_HeaderActive] = ImVec4(0.96f, 0.37f, 0.37f, 1.00f);
-    colors[ImGuiCol_Separator] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
-    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.75f, 0.10f, 0.10f, 0.78f);
-    colors[ImGuiCol_SeparatorActive] = ImVec4(0.68f, 0.18f, 0.18f, 1.00f);
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.98f, 0.26f, 0.26f, 0.20f);
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.93f, 0.31f, 0.31f, 0.67f);
-    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.26f, 0.26f, 0.88f);
-    colors[ImGuiCol_InputTextCursor] = ImVec4(0.72f, 0.34f, 0.34f, 1.00f);
-    colors[ImGuiCol_TabHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    colors[ImGuiCol_Tab] = ImVec4(0.58f, 0.18f, 0.18f, 0.86f);
-    colors[ImGuiCol_TabSelected] = ImVec4(0.68f, 0.20f, 0.20f, 1.00f);
-    colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
-    colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.42f, 0.14f, 0.14f, 1.00f);
+    //colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.51f, 0.51f, 0.70f);
+    // colors[ImGuiCol_Text] = ImVec4(0.85f, 0.51f, 0.51f, 1.00f);
+    // colors[ImGuiCol_TextDisabled] = ImVec4(0.65f, 0.45f, 0.45f, 1.00f);
+    // colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.89f);
+    // colors[ImGuiCol_ChildBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.71f);
+    // colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.77f);
+    // colors[ImGuiCol_Border] = ImVec4(1.00f, 0.75f, 0.75f, 0.34f);
+    // colors[ImGuiCol_FrameBg] = ImVec4(0.46f, 0.25f, 0.25f, 0.50f);
+    // colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 0.75f, 0.75f, 0.39f);
+    // colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.29f, 0.29f, 0.47f);
+    // colors[ImGuiCol_TitleBg] = ImVec4(0.78f, 0.32f, 0.36f, 0.34f);
+    // colors[ImGuiCol_TitleBgActive] = ImVec4(0.88f, 0.42f, 0.46f, 0.34f);
+    // colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.62f, 0.85f, 1.00f);
+    // colors[ImGuiCol_TextLink] = ImVec4(0.93f, 0.50f, 0.96f, 1.00f);
+    // colors[ImGuiCol_TextSelectedBg] = ImVec4(0.93f, 0.70f, 0.70f, 0.40f);
+    // colors[ImGuiCol_TreeLines] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
+    // colors[ImGuiCol_NavCursor] = ImVec4(0.98f, 0.33f, 0.26f, 1.00f);
+    // colors[ImGuiCol_SliderGrab] = ImVec4(0.84f, 0.40f, 0.40f, 1.00f);
+    // colors[ImGuiCol_SliderGrabActive] = ImVec4(0.79f, 0.33f, 0.33f, 1.00f);
+    // colors[ImGuiCol_Button] = ImVec4(0.98f, 0.26f, 0.26f, 0.40f);
+    // colors[ImGuiCol_ButtonHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
+    // colors[ImGuiCol_ButtonActive] = ImVec4(0.94f, 0.20f, 0.20f, 0.89f);
+    // colors[ImGuiCol_Header] = ImVec4(0.98f, 0.26f, 0.26f, 0.31f);
+    // colors[ImGuiCol_HeaderHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
+    // colors[ImGuiCol_HeaderActive] = ImVec4(0.96f, 0.37f, 0.37f, 1.00f);
+    // colors[ImGuiCol_Separator] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
+    // colors[ImGuiCol_SeparatorHovered] = ImVec4(0.75f, 0.10f, 0.10f, 0.78f);
+    // colors[ImGuiCol_SeparatorActive] = ImVec4(0.68f, 0.18f, 0.18f, 1.00f);
+    // colors[ImGuiCol_ResizeGrip] = ImVec4(0.98f, 0.26f, 0.26f, 0.20f);
+    // colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.93f, 0.31f, 0.31f, 0.67f);
+    // colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.26f, 0.26f, 0.88f);
+    // colors[ImGuiCol_InputTextCursor] = ImVec4(0.72f, 0.34f, 0.34f, 1.00f);
+    // colors[ImGuiCol_TabHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
+    // colors[ImGuiCol_Tab] = ImVec4(0.58f, 0.18f, 0.18f, 0.86f);
+    // colors[ImGuiCol_TabSelected] = ImVec4(0.68f, 0.20f, 0.20f, 1.00f);
+    // colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
+    // colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.42f, 0.14f, 0.14f, 1.00f);
 
-    SUCCESS("Successfully initialized Imgui!");
+
+    //colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.51f, 0.51f, 0.70f);
+    ImVec4 bg = ImVec4(0.12f, 0.12f, 0.18f, 0.85f);
+    ImVec4 fg = ImVec4(0.82f, 0.53f, 0.64f, 1.00f);
+    ImVec4 sub_fg = ImVec4(0.69f, 0.55f, 0.70f, 1.00f);
+    ImVec4 border = ImVec4(0.30f, 0.34f, 0.42f, 0.50f);
+
+    colors[ImGuiCol_Text] = ImVec4(0.85f, 0.87f, 0.91f, 1.00f);
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.44f, 0.47f, 0.55f, 1.00f);
+    colors[ImGuiCol_WindowBg] = bg;
+    colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.12f, 0.18f, 0.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.12f, 0.12f, 0.18f, 0.95f);
+    colors[ImGuiCol_Border] = border;
+    colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+
+    colors[ImGuiCol_FrameBg] = ImVec4(0.23f, 0.26f, 0.32f, 0.54f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.30f, 0.34f, 0.42f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.82f, 0.53f, 0.64f, 0.20f);
+
+    colors[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.15f, 0.23f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.12f, 0.12f, 0.18f, 0.50f);
+
+    colors[ImGuiCol_Button] = ImVec4(0.82f, 0.53f, 0.64f, 0.40f);
+    colors[ImGuiCol_ButtonHovered] = fg;
+    colors[ImGuiCol_ButtonActive] = ImVec4(0.82f, 0.53f, 0.64f, 0.80f);
+
+    colors[ImGuiCol_Header] = ImVec4(0.69f, 0.55f, 0.70f, 0.30f);
+    colors[ImGuiCol_HeaderHovered] = ImVec4(0.69f, 0.55f, 0.70f, 0.80f);
+    colors[ImGuiCol_HeaderActive] = sub_fg;
+
+    colors[ImGuiCol_CheckMark] = fg;
+    colors[ImGuiCol_SliderGrab] = ImVec4(0.82f, 0.53f, 0.64f, 0.70f);
+    colors[ImGuiCol_SliderGrabActive] = fg;
+
+    colors[ImGuiCol_Tab] = ImVec4(0.23f, 0.26f, 0.32f, 1.00f);
+    colors[ImGuiCol_TabHovered] = ImVec4(0.82f, 0.53f, 0.64f, 0.80f);
+    colors[ImGuiCol_TabSelected] = fg;
+    colors[ImGuiCol_TabSelectedOverline] = fg;
+    colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.82f, 0.53f, 0.64f, 0.20f);
+
+    colors[ImGuiCol_Separator] = border;
+    colors[ImGuiCol_ResizeGrip] = ImVec4(0.82f, 0.53f, 0.64f, 0.20f);
+    colors[ImGuiCol_ResizeGripHovered] = fg;
+    colors[ImGuiCol_ResizeGripActive] = fg;
+
+
+    SUCCESS("Successfully init Imgui!");
 
     return;
 }
@@ -133,34 +194,39 @@ void Game::InitScene()
     bodyIds.push_back(bodyId);
 
 
-    SUCCESS("Successfully initialized scene!");
+    SUCCESS("Successfully init scene!");
     return;
 }
 
 void Game::InitWindow()
 {
-    //window.setFramerateLimit(120);
-    worldView.setSize(static_cast<sf::Vector2f>(window.getSize()));
-    worldView.setCenter({worldView.getSize().x / 2, worldView.getSize().y / 2});
-    uiView.setSize(static_cast<sf::Vector2f>(window.getSize()));
-    uiView.setCenter({uiView.getSize().x / 2, uiView.getSize().y / 2});
-    //worldView.rotate(sf::degrees(180));
-    SUCCESS("Successfully initialized window!");
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == false)
+    {
+        SDL_Log("Failed to init SDL!: %s", SDL_GetError());
+        ERROR("Failed to init SDL!");
+    }
+    window = SDL_CreateWindow("CppProject", width, height, SDL_WINDOW_TRANSPARENT);
+    if (!window)
+        ERROR("Failed to init window!");
+    renderer = SDL_CreateRenderer(window, nullptr);
+    if (!renderer)
+        ERROR("Failed to init renderer!");
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SUCCESS("Successfully init window!");
     return;
 }
 
 void Game::InitResources()
 {
-    textureManager.init();
-    textureManager.get("snake.png"); //Si si si
-    textureManager.get("sheep.png");
-    shaderManager.get("noise").get();
+    textureManager.init(renderer);
+    textureManager.get(renderer, "snake.png"); //Si si si
+    textureManager.get(renderer, "sheep.png");
     {
         SpawnableObject box;
         box.name = "Box";
         box.type = "Solid";
         box.describe = "An ordinary box.";
-        box.icon = *textureManager.get("snake.png");
+        box.icon = textureManager.get(renderer, "snake.png").get();
         box.onSpawned = [this](b2Vec2 pos, float size, float friction, float restitution) -> bool {
             b2BodyDef bodyDef = b2DefaultBodyDef();
             bodyDef.type = b2_dynamicBody;
@@ -183,7 +249,7 @@ void Game::InitResources()
         circle.name = "Cirlce";
         circle.type = "Solid";
         circle.describe = "An ordinary circle.";
-        circle.icon = *textureManager.get("snake.png");
+        circle.icon = textureManager.get(renderer, "snake.png").get();
         circle.onSpawned = [this](b2Vec2 pos, float size, float friction, float restitution) -> bool {
             b2BodyDef bodyDef = b2DefaultBodyDef();
             bodyDef.type = b2_dynamicBody;
@@ -208,7 +274,7 @@ void Game::InitResources()
         particle.name = "particle";
         particle.type = "particle";
         particle.describe = "An ordinary circle.";
-        particle.icon = *textureManager.get("snake.png");
+        particle.icon = textureManager.get(renderer, "snake.png").get();
         particle.onSpawned = [this](b2Vec2 pos, float size, float friction, float restitution) -> bool {
             particleWorld.groups[0].createParticle(worldId, pos);
 
@@ -216,7 +282,7 @@ void Game::InitResources()
         };
         spawnableBrowser.addObject(particle);
     }
-    SUCCESS("Successfully initialized resources!");
+    SUCCESS("Successfully init resources!");
     return;
 }
 
@@ -224,9 +290,9 @@ void Game::InitFluid()
 {
     ParticleGroup group;
     group.world = &particleWorld;
-    group.color = sf::Color::Cyan;
+    group.color = SDL_Color{0, 255, 255};
     particleWorld.groups.push_back(std::move(group));
     particleWorld.init();
-    SUCCESS("Successfully initialized fluid!");
+    SUCCESS("Successfully init fluid!");
     return;
 }

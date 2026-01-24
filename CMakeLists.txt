@@ -1,8 +1,15 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 project(Test1 VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# =============== 寻找包 (系统级) ===============
+find_package(SDL3 REQUIRED CONFIG)
+find_package(box2d REQUIRED CONFIG)
+find_package(SDL3_image REQUIRED CONFIG)
+find_package(OpenGL REQUIRED)
+find_package(imgui REQUIRED CONFIG)
 
 # =============== 源文件列表 ===============
 set(SOURCES
@@ -18,48 +25,17 @@ set(SOURCES
 # =============== 可执行文件 ===============
 add_executable(main ${SOURCES})
 
-# =============== 头文件目录（当前目录） ===============
+# =============== 包含目录 ===============
 target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR})
 
-# =============== OpenGL ===============
-find_package(OpenGL REQUIRED)
-target_link_libraries(main OpenGL::GL)
-
-# =============== SFML ===============
-set(SFML_ROOT /home/snake/code/cpp/LIBS/SFML/SFML-3.0.2)
-target_include_directories(main PRIVATE ${SFML_ROOT}/include)
-target_link_directories(main PRIVATE ${SFML_ROOT}/lib)
-target_link_libraries(main
-    sfml-graphics
-    sfml-window
-    sfml-system
+# =============== 链接库 ===============
+target_link_libraries(main PRIVATE 
+    SDL3::SDL3
+    SDL3_image::SDL3_image
+    box2d::box2d
+    OpenGL::GL
+    imgui::imgui
 )
-# =============== Box2D ===============
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(BOX2D_BUILD_DIR /home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/buildD)
-    set(BOX2D_LIB box2dd)
-else()
-    set(BOX2D_BUILD_DIR /home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/buildR)
-    set(BOX2D_LIB box2d)
-endif()
-
-target_include_directories(main PRIVATE /home/snake/code/cpp/LIBS/box2d/box2d-main3.1.1/include)
-target_link_directories(main PRIVATE ${BOX2D_BUILD_DIR}/bin)
-target_link_libraries(main ${BOX2D_LIB})
-set(CMAKE_BUILD_RPATH "${SFML_ROOT}/lib:${BOX2D_BUILD_DIR}/bin")
-
-# =============== ImGui + ImGui-SFML ===============
-set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/imgui)
-set(IMGUI_SOURCES
-    ${IMGUI_DIR}/imgui.cpp
-    ${IMGUI_DIR}/imgui_demo.cpp
-    ${IMGUI_DIR}/imgui_draw.cpp
-    ${IMGUI_DIR}/imgui_tables.cpp
-    ${IMGUI_DIR}/imgui_widgets.cpp
-    ${IMGUI_DIR}/imgui-SFML.cpp
-)
-target_sources(main PRIVATE ${IMGUI_SOURCES})
-target_include_directories(main PRIVATE ${IMGUI_DIR})
 
 # =============== 复制 Assets 文件夹 ===============
 set(ASSETS_SOURCE_DIR ${CMAKE_SOURCE_DIR}/Assets)

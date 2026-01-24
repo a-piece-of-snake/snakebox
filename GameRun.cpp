@@ -1,6 +1,6 @@
 #include "Game.h"
 
-
+//从box1d示例里直接拿的
 struct QueryContext
 {
     b2Vec2 point;
@@ -32,7 +32,7 @@ bool QueryCallback(b2ShapeId shapeId, void* context)
 
 void Game::Run()
 {
-    while (window.isOpen())
+    while (running)
     {
         Update();
         Render();
@@ -42,107 +42,90 @@ void Game::Run()
 }
 void Game::Update()
 {
-    lastOMousePos = oMousePos;
     lastMousePos = mousePos;
     lastWorldPos = worldPos;
-    mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-    oMousePos = sf::Mouse::getPosition();
+    SDL_GetMouseState(&mousePos.x, &mousePos.y);
     worldPos = {mousePos.x, mousePos.y};
-    if (fpsClock.getElapsedTime().asSeconds() >= 1.0f)
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
     {
-        window.setTitle("CppProject FPS:" +
-                        std::to_string(static_cast<unsigned int>(tickCount / fpsClock.getElapsedTime().asSeconds())));
-        tickCount = 0;
-        fpsClock.restart();
-    }
-    while (const std::optional event = window.pollEvent())
-    {
-        ImGui::SFML::ProcessEvent(window, *event);
-        if (event->is<sf::Event::Closed>())
+        ImGui_ImplSDL3_ProcessEvent(&event);
+
+        if (event.type == SDL_EVENT_QUIT)
         {
-            window.close();
+            running = false;
         }
         if (!ImGui::IsAnyItemHovered())
-            HandleEvent(*event);
+            HandleEvent(&event);
     }
+
     ImGuiRelated();
     if (!ImGui::IsAnyItemHovered())
-        if (window.hasFocus())
-            KeyLogic();
+        KeyLogic();
     UpdateWorld();
+}
+void renderMouseTriangle(SDL_Renderer* renderer, SDL_FPoint mousePos)
+{
+    float time = SDL_GetTicks() / 1000.0f;
+    float angle = time * 2.0f;
+    float radius = 30.0f;
+    float alpha = 0.5f;
+    SDL_Vertex mouseVertices[3] = {
+        {{mousePos.x + radius * cosf(angle), mousePos.y + radius * sinf(angle)}, {1.0f, 0.0f, 0.0f, alpha}, {0, 0}},
+        {{mousePos.x + radius * cosf(angle + 2.094f), mousePos.y + radius * sinf(angle + 2.094f)},
+         {0.0f, 1.0f, 0.0f, alpha},
+         {0, 0}},
+        {{mousePos.x + radius * cosf(angle + 4.188f), mousePos.y + radius * sinf(angle + 4.188f)},
+         {0.0f, 0.0f, 1.0f, alpha},
+         {0, 0}}};
+    SDL_RenderGeometry(renderer, nullptr, mouseVertices, 3, nullptr, 0);
 }
 void Game::Render()
 {
-    worldView.setSize({window.getSize().x * worldZoom, window.getSize().y * worldZoom});
-    window.clear();
-    window.setView(uiView);
-    //uiView.setSize(static_cast<sf::Vector2f>(window.getSize()));
-
-
-    uiView.setSize(static_cast<sf::Vector2f>(window.getSize()));
-    uiView.setCenter(uiView.getSize() / 2.f);
-
-    uiView.setScissor(sf::FloatRect({0.f, 0.f}, {1.f, 1.f}));
-    sf::Texture* bgT = textureManager.get("BackGround.png").get();
-    bgT->setRepeated(true);
-    sf::RectangleShape background(static_cast<sf::Vector2f>(uiView.getSize()));
-
-    sf::Vector2f viewSize = uiView.getSize();
-    sf::Vector2i rectSize(static_cast<int>(viewSize.x * worldZoom), static_cast<int>(viewSize.y * worldZoom));
-
-    sf::Vector2i rectPos(static_cast<int>(worldView.getCenter().x - rectSize.x / 2),
-                         static_cast<int>(worldView.getCenter().y - rectSize.y / 2));
-
-    background.setTexture(bgT);
-    background.setTextureRect(sf::IntRect(rectPos, rectSize));
-
-    window.draw(background);
-
-    // sf::RenderTexture bgTexture({window.getSize().x / 2, window.getSize().y / 2});
-    // auto noiseShader = shaderManager.get("noise").get();
-    // noiseShader->setUniform("u_resolution", static_cast<sf::Vector2f>(window.getSize()));
-    // noiseShader->setUniform("u_time", clock.getElapsedTime().asSeconds());
-    // bgTexture.draw(background, noiseShader);
-    // sf::Sprite bgSprite(bgTexture.getTexture());
-    // bgSprite.scale({10, 10});
-    // window.draw(bgSprite);
-
-    window.setView(worldView);
-
+    SDL_SetRenderDrawColorFloat(renderer, 12.f / 255, 12.f / 255, 18.f / 255, 0.7f);
+    SDL_RenderClear(renderer);
     DrawWorld();
-    ImGui::SFML::Render(window);
-    window.display();
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+    renderMouseTriangle(renderer, mousePos);
+    SDL_RenderPresent(renderer);
 }
 void Game::ImGuiRelated()
 {
-    ImGui::SFML::Update(window, deltaClock.restart());
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
 
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
-                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                    ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
-                                    ImGuiWindowFlags_NoBackground;
 
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
-    ImGui::SetNextWindowViewport(viewport->ID);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    if (ImGui::Begin("DockSpace", nullptr, window_flags))
-    {
-        ImGui::PopStyleVar(2);
-        ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-        ImGui::DockSpace(dockspace_id,
-                         ImVec2(0.0f, 0.0f),
-                         ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode);
-        ImGui::End();
-    }
+    // ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
+    //                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+    //                                 ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
+    //                                 ImGuiWindowFlags_NoBackground;
+
+    // ImGuiViewport* viewport = ImGui::GetMainViewport();
+    // ImGui::SetNextWindowPos(viewport->WorkPos);
+    // ImGui::SetNextWindowSize(viewport->WorkSize);
+    // ImGui::SetNextWindowViewport(viewport->ID);
+    // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    // ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    // if (ImGui::Begin("DockSpace", nullptr, window_flags))
+    // {
+    //     ImGui::PopStyleVar(2);
+    //     ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+    //     ImGui::DockSpace(dockspace_id,
+    //                      ImVec2(0.0f, 0.0f),
+    //                      ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode);
+    //     ImGui::End();
+    // }
 
     spawnableBrowser.render();
 }
 void Game::KeyLogic()
 {
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl))
+    const bool* keyStates = SDL_GetKeyboardState(nullptr);
+    Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+    if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) && keyStates[SDL_SCANCODE_LCTRL])
     {
         static bool firstClick = true;
 
@@ -178,15 +161,16 @@ void Game::KeyLogic()
         }
     }
 }
-void Game::HandleEvent(const sf::Event& event)
+void Game::HandleEvent(SDL_Event* event)
 {
-    if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>())
+    switch (event->type)
     {
+    case SDL_EVENT_MOUSE_BUTTON_DOWN: {
         if (B2_IS_NON_NULL(mouseJointId))
         {
             return;
         }
-        if (mousePressed->button == sf::Mouse::Button::Left)
+        if (event->button.button == SDL_BUTTON_LEFT)
         {
             b2Vec2 p = worldPos;
             // Make a small box.
@@ -201,53 +185,52 @@ void Game::HandleEvent(const sf::Event& event)
 
             if (B2_IS_NON_NULL(queryContext.bodyId))
             {
+                //为啥aur里装的box2d
                 b2BodyDef bodyDef = b2DefaultBodyDef();
                 bodyDef.type = b2_kinematicBody;
                 bodyDef.position = worldPos;
                 bodyDef.enableSleep = false;
                 mouseBodyId = b2CreateBody(worldId, &bodyDef);
-                b2MotorJointDef jointDef = b2DefaultMotorJointDef();
-                jointDef.base.bodyIdA = mouseBodyId;
-                jointDef.base.bodyIdB = queryContext.bodyId;
-                jointDef.base.localFrameB.p = b2Body_GetLocalPoint(queryContext.bodyId, p);
-                jointDef.linearHertz = 1.5f;
-                jointDef.linearDampingRatio = 2.5f;
+                b2DistanceJointDef jointDef = b2DefaultDistanceJointDef();
+                jointDef.bodyIdA = mouseBodyId;
+                jointDef.bodyIdB = queryContext.bodyId;
+                jointDef.localAnchorA.x = b2Body_GetLocalPoint(mouseBodyId, p).x;
+                jointDef.localAnchorA.y = b2Body_GetLocalPoint(mouseBodyId, p).y;
+                jointDef.localAnchorB.x = b2Body_GetLocalPoint(queryContext.bodyId, p).x;
+                jointDef.localAnchorB.y = b2Body_GetLocalPoint(queryContext.bodyId, p).y;
+                jointDef.length = 0.001f;
+                jointDef.enableMotor = true;
+                jointDef.enableSpring = true;
+                jointDef.motorSpeed = 10.f;
+                jointDef.hertz = 0.1f;
+                jointDef.dampingRatio = 0.5f;
+                //jointDef.linearHertz = 1.5f;
+                //jointDef.linearDampingRatio = 2.5f;
 
-                b2MassData massData = b2Body_GetMassData(queryContext.bodyId);
-                float g = b2Length(b2World_GetGravity(worldId));
-                float mg = massData.mass * g;
-
-                jointDef.maxSpringForce = mouseForceScale * mg;
-
-                if (massData.mass > 0.0f)
-                {
-                    // This acts like angular friction
-                    float lever = sqrtf(massData.rotationalInertia / massData.mass);
-                    jointDef.maxVelocityTorque = 0.25f * lever * mg;
-                }
-
-                mouseJointId = b2CreateMotorJoint(worldId, &jointDef);
+                mouseJointId = b2CreateDistanceJoint(worldId, &jointDef);
             }
         }
+        break;
     }
-    if (const auto* mouseRelease = event.getIf<sf::Event::MouseButtonReleased>())
-    {
-        if (mouseRelease->button == sf::Mouse::Button::Left)
+    case SDL_EVENT_MOUSE_BUTTON_UP: {
+        if (event->button.button == SDL_BUTTON_LEFT)
         {
             if (B2_IS_NON_NULL(mouseJointId))
             {
-                b2DestroyJoint(mouseJointId, true);
+                b2DestroyJoint(mouseJointId);
                 mouseJointId = b2_nullJointId;
 
                 b2DestroyBody(mouseBodyId);
                 mouseBodyId = b2_nullBodyId;
             }
         }
+        break;
     }
-    if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
-    {
-        if (keyPressed->scancode == sf::Keyboard::Scan::R)
+    case SDL_EVENT_KEY_DOWN: {
+        SDL_Keycode key = event->key.key;
+        if (key == SDLK_R)
         {
+            SUCCESS("World Reset");
             for (auto& bodyId : bodyIds)
             {
                 b2DestroyBody(bodyId);
@@ -258,53 +241,57 @@ void Game::HandleEvent(const sf::Event& event)
                 group.particles.clear();
             }
         }
-        static const std::unordered_map<sf::Keyboard::Scan, int> keyToIndex = {{sf::Keyboard::Scan::Num1, 0},
-                                                                               {sf::Keyboard::Scan::Num2, 1},
-                                                                               {sf::Keyboard::Scan::Num3, 2},
-                                                                               {sf::Keyboard::Scan::Num4, 3},
-                                                                               {sf::Keyboard::Scan::Num5, 4},
-                                                                               {sf::Keyboard::Scan::Num6, 5},
-                                                                               {sf::Keyboard::Scan::Num7, 6},
-                                                                               {sf::Keyboard::Scan::Num8, 7},
-                                                                               {sf::Keyboard::Scan::Num9, 8},
-                                                                               {sf::Keyboard::Scan::Num0, 9}};
-
-        auto it = keyToIndex.find(keyPressed->scancode);
-        if (it != keyToIndex.end())
+        if (key == SDLK_SPACE)
         {
-            int index = it->second;
-            auto* obj = spawnableBrowser.selectedObject[index];
-
-            if (obj && !obj->spawn(worldPos,
-                                   spawnableBrowser.selectedObjectSize,
-                                   spawnableBrowser.selectedObjectFriction,
-                                   spawnableBrowser.selectedObjectRestitution))
+            pause = !pause;
+        }
+        if (key >= SDLK_0 && key <= SDLK_9)
+        {
+            int index = key - SDLK_0 - 1;
+            if (key == SDLK_0)
             {
-                ERROR("Failed to spawn object!");
+                index = 9;
+            }
+            if (index < 11)
+            {
+                auto* obj = spawnableBrowser.selectedObject[index];
+                if (obj)
+                {
+                    bool success = obj->spawn(worldPos,
+                                              spawnableBrowser.selectedObjectSize,
+                                              spawnableBrowser.selectedObjectFriction,
+                                              spawnableBrowser.selectedObjectRestitution);
+                    if (!success)
+                        ERROR("Failed to spawn object %d!", index);
+                }
             }
         }
+        break;
     }
-    if (const auto* MouseWheelScrolled = event.getIf<sf::Event::MouseWheelScrolled>())
-    {
-        float zoom = (MouseWheelScrolled->delta > 0) ? -0.1f : 0.1f;
+    case SDL_EVENT_MOUSE_WHEEL: {
+        float zoom = (event->wheel.y > 0) ? -0.1f : 0.1f;
         worldZoom += zoom;
         worldZoom = std::max(worldZoom, 0.01f);
+        break;
     }
-    if (const auto* mouseMoved = event.getIf<sf::Event::MouseMoved>())
-    {
+    case SDL_EVENT_MOUSE_MOTION: {
         if (b2Joint_IsValid(mouseJointId) == false)
         {
             // The world or attached body was destroyed.
             mouseJointId = b2_nullJointId;
         }
-
-        mousePos = {(float)mouseMoved->position.x, (float)mouseMoved->position.y};
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Middle) ||
-            sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LAlt))
+        const bool* keyStates = SDL_GetKeyboardState(nullptr);
+        Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+        if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE) || keyStates[SDL_SCANCODE_LALT])
         {
-            worldView.move({static_cast<float>(lastOMousePos.x - oMousePos.x) * worldZoom,
-                            static_cast<float>(lastOMousePos.y - oMousePos.y) * worldZoom});
+            // worldView.move({static_cast<float>(lastOMousePos.x - oMousePos.x) * worldZoom,
+            //                 static_cast<float>(lastOMousePos.y - oMousePos.y) * worldZoom});
         }
+        break;
+    }
+    default: {
+        break;
+    }
     }
 }
 void Game::UpdateWorld()
@@ -336,8 +323,8 @@ void Game::UpdateWorld()
 }
 void Game::DrawWorld()
 {
-    drawB2(window, bodyIds);
-    drawFluid(window, particleWorld);
+    drawB2(renderer, bodyIds);
+    drawFluid(renderer, particleWorld);
 }
 void Game::RenderUi()
 {
