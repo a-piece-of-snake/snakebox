@@ -1,6 +1,6 @@
 #include "Game.h"
 
-//从box1d示例里直接拿的
+//从box2d示例里直接拿的
 struct QueryContext
 {
     b2Vec2 point;
@@ -86,6 +86,22 @@ void Game::Render()
     SDL_SetRenderDrawColorFloat(renderer, 12.f / 255, 12.f / 255, 18.f / 255, 0.7f);
     SDL_RenderClear(renderer);
     DrawWorld();
+    if (B2_IS_NON_NULL(mouseBodyId) && B2_IS_NON_NULL(mouseJointId))
+    {
+        std::vector<SDL_Vertex> mouseLine;
+        b2Rot mouseBodyRot = b2Body_GetRotation(b2Joint_GetBodyB(mouseJointId));
+        float cosAngle = mouseBodyRot.c;
+        float sinAngle = mouseBodyRot.s;
+        b2Vec2 mouseBodyPos = b2Body_GetPosition(b2Joint_GetBodyB(mouseJointId));
+        b2Vec2 mouseBodyLocal = b2Joint_GetLocalAnchorB(mouseJointId);
+        makeLine(&mouseLine,
+                 mousePos,
+                 {mouseBodyPos.x + mouseBodyLocal.x * cosAngle - mouseBodyLocal.y * sinAngle,
+                  mouseBodyPos.y + mouseBodyLocal.x * sinAngle + mouseBodyLocal.y * cosAngle},
+                 2.5f,
+                 getColorStyle()[ColorKeys::b2Joint]);
+        SDL_RenderGeometry(renderer, nullptr, mouseLine.data(), mouseLine.size(), nullptr, 0);
+    }
     ImGui::Render();
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
     renderMouseTriangle(renderer, mousePos);

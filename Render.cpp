@@ -8,6 +8,14 @@ const float WIDTH = 1;
 static std::vector<SDL_Vertex> shapeVertices;
 static std::vector<SDL_Vertex> outlineVertices;
 
+std::vector<SDL_FColor>& getColorStyle()
+{
+    static std::vector<SDL_FColor> colorStyle = {SDL_FColor{0.55f, 0.66f, 0.64f, 0.5f},
+                                                 SDL_FColor{0.82f, 0.53f, 0.64f, 1.0f},
+                                                 SDL_FColor{0.69f, 0.55f, 0.70f, 1.0f}};
+    return colorStyle;
+}
+
 void makeLine(
     std::vector<SDL_Vertex>* vertexs, const SDL_FPoint& a, const SDL_FPoint& b, float width, const SDL_FColor& fcolor)
 {
@@ -34,11 +42,11 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
         b2Body_GetShapes(bodyId, shapeIds.data(), shapecount);
         b2Vec2 pos = b2Body_GetPosition(bodyId);
         b2Rot rot = b2Body_GetRotation(bodyId);
+        float cosAngle = rot.c;
+        float sinAngle = rot.s;
         // float angle = atan2(rot.s, rot.c);
         // float cosAngle = cos(angle);
         // float sinAngle = sin(angle);
-        float cosAngle = rot.c;
-        float sinAngle = rot.s;
         for (const auto& shapeId : shapeIds)
         {
             b2ShapeType shapeType = b2Shape_GetType(shapeId);
@@ -78,7 +86,7 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
                     }
                     else
                     {
-                        v.color = Colors::b2Body;
+                        v.color = getColorStyle()[ColorKeys::b2Body];
                     }
                     worldVertices.push_back(v);
                 }
@@ -152,7 +160,7 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
                     }
                     else
                     {
-                        centerV.color = v1.color = v2.color = Colors::b2Body;
+                        centerV.color = v1.color = v2.color = getColorStyle()[ColorKeys::b2Body];
                     }
 
                     shapeVertices.push_back(centerV);
@@ -194,9 +202,12 @@ void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld)
             b2Vec2 pos1 = particle.pos + offect[0] * radius;
             b2Vec2 pos2 = particle.pos + offect[1] * radius;
             b2Vec2 pos3 = particle.pos + offect[2] * radius;
-            shapeVertices.emplace_back(SDL_FPoint{pos1.x, pos1.y}, Colors::b2Body, SDL_FPoint{0, 0});
-            shapeVertices.emplace_back(SDL_FPoint{pos2.x, pos2.y}, Colors::b2Body, SDL_FPoint{0, 0});
-            shapeVertices.emplace_back(SDL_FPoint{pos3.x, pos3.y}, Colors::b2Body, SDL_FPoint{0, 0});
+            shapeVertices.emplace_back(
+                SDL_FPoint{pos1.x, pos1.y}, getColorStyle()[ColorKeys::b2Body], SDL_FPoint{0, 0});
+            shapeVertices.emplace_back(
+                SDL_FPoint{pos2.x, pos2.y}, getColorStyle()[ColorKeys::b2Body], SDL_FPoint{0, 0});
+            shapeVertices.emplace_back(
+                SDL_FPoint{pos3.x, pos3.y}, getColorStyle()[ColorKeys::b2Body], SDL_FPoint{0, 0});
             makeLine(&outlineVertices, {pos1.x, pos1.y}, {pos2.x, pos2.y}, WIDTH, outlineColor);
             makeLine(&outlineVertices, {pos2.x, pos2.y}, {pos3.x, pos3.y}, WIDTH, outlineColor);
             makeLine(&outlineVertices, {pos3.x, pos3.y}, {pos1.x, pos1.y}, WIDTH, outlineColor);

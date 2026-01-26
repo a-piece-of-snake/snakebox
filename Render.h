@@ -3,18 +3,38 @@
 #include <SDL3/SDL.h>
 #include <box2d/box2d.h>
 #include <cmath>
+#include <cstddef>
 
 #include "ColorfulLog.h"
 #include "Fluid.h"
 #include "Math.h"
 #include "Resources.h"
 
-namespace Colors
+namespace ColorKeys
 {
-constexpr SDL_FColor b2Body = SDL_FColor{0.55f, 0.66f, 0.64f, 0.5f};
-constexpr SDL_FColor b2BodyOutline = SDL_FColor{0.82f, 0.53f, 0.64f, 1.0f};
-constexpr SDL_FColor b2Joint = SDL_FColor{0.69f, 0.55f, 0.70f, 1.0f};
-} // namespace Colors
+enum colorKeys : size_t
+{
+    b2Body = 0,
+    b2BodyOutline = 1,
+    b2Joint = 2,
+    COUNT
+};
+} // namespace ColorKeys
+
+class Camera
+{
+public:
+    float x, y;
+    float rot;
+    float zoom;
+
+private:
+};
+
+std::vector<SDL_FColor>& getColorStyle();
+
+void makeLine(
+    std::vector<SDL_Vertex>* vertexs, const SDL_FPoint& a, const SDL_FPoint& b, float width, const SDL_FColor& fcolor);
 
 void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Texture* texture = nullptr);
 void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld);
