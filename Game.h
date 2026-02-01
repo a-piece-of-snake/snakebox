@@ -64,6 +64,7 @@ private:
     bool pause = false;
     int particleCount = 0;
     std::vector<b2BodyId> bodyIds;
+    std::vector<b2BodyId> bodyDestroyBuffer;
     b2WorldId worldId;
 
     float mouseForceScale = 5.0f;

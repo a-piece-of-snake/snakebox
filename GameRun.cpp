@@ -1,4 +1,8 @@
+#include <box2d/box2d.h>
+
+#include "Fluid.h"
 #include "Game.h"
+#include "Render.h"
 
 //从box2d示例里直接拿的
 struct QueryContext
@@ -46,6 +50,12 @@ void Game::Update()
     lastWorldPos = worldPos;
     SDL_GetMouseState(&mousePos.x, &mousePos.y);
     worldPos = {mousePos.x, mousePos.y};
+
+    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
+    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
+    SDL_FColor bodyColor = HSLAtoRGBA_F(hue, 1.f, 0.5f, 0.5f);
+    getColorStyle()[ColorKeys::b2BodyOutline] = outlineColor;
+    getColorStyle()[ColorKeys::b2Body] = bodyColor;
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -176,6 +186,25 @@ void Game::KeyLogic()
             }
         }
     }
+
+    if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) && keyStates[SDL_SCANCODE_D])
+    {
+        b2Vec2 p = worldPos;
+        // Make a small box.
+        b2AABB box;
+        b2Vec2 d = {0.001f, 0.001f};
+        box.lowerBound = b2Sub(p, d);
+        box.upperBound = b2Add(p, d);
+
+        // Query the world for overlapping shapes.
+        QueryContext queryContext = {p, b2_nullBodyId};
+        b2World_OverlapAABB(worldId, box, b2DefaultQueryFilter(), QueryCallback, &queryContext);
+
+        if (B2_IS_NON_NULL(queryContext.bodyId))
+        {
+            bodyDestroyBuffer.push_back(queryContext.bodyId);
+        }
+    }
 }
 void Game::HandleEvent(SDL_Event* event)
 {
@@ -184,7 +213,7 @@ void Game::HandleEvent(SDL_Event* event)
     case SDL_EVENT_MOUSE_BUTTON_DOWN: {
         if (B2_IS_NON_NULL(mouseJointId))
         {
-            return;
+            break;
         }
         if (event->button.button == SDL_BUTTON_LEFT)
         {
@@ -201,7 +230,6 @@ void Game::HandleEvent(SDL_Event* event)
 
             if (B2_IS_NON_NULL(queryContext.bodyId))
             {
-                //为啥aur里装的box2d
                 b2BodyDef bodyDef = b2DefaultBodyDef();
                 bodyDef.type = b2_kinematicBody;
                 bodyDef.position = worldPos;
@@ -314,26 +342,44 @@ void Game::UpdateWorld()
 {
     if (!pause)
     {
-        if (B2_IS_NON_NULL(mouseJointId) && b2Joint_IsValid(mouseJointId) == false)
+        if (B2_IS_NON_NULL(mouseBodyId))
         {
-            // The world or attached body was destroyed.
-            mouseJointId = b2_nullJointId;
-
-            if (B2_IS_NON_NULL(mouseBodyId))
+            if (!b2Body_IsValid(mouseBodyId) || (B2_IS_NON_NULL(mouseJointId) && !b2Joint_IsValid(mouseJointId)))
             {
-                b2DestroyBody(mouseBodyId);
+                mouseJointId = b2_nullJointId;
                 mouseBodyId = b2_nullBodyId;
             }
+            else
+            {
+                b2Body_SetTargetTransform(mouseBodyId, {worldPos, b2Rot_identity}, 1.0f / 15.0f);
+            }
         }
-
-        if (B2_IS_NON_NULL(mouseBodyId) && 1.0 / 15.f > 0.0f)
-        {
-            b2Body_SetTargetTransform(mouseBodyId, {worldPos, b2Rot_identity}, 1.0 / 15.f);
-        }
-
         particleWorld.groups[0].step(1.0f / 15.f);
         b2World_Step(worldId, 1.0f / 15.f, 4);
         particleWorld.update();
+    }
+
+    if (!bodyDestroyBuffer.empty())
+    {
+        for (auto& bodyId : bodyDestroyBuffer)
+        {
+            if (b2Body_IsValid(bodyId))
+            {
+                if (B2_IS_NON_NULL(mouseJointId) && B2_ID_EQUALS(b2Joint_GetBodyB(mouseJointId), bodyId))
+                {
+                    b2DestroyJoint(mouseJointId);
+                    mouseJointId = b2_nullJointId;
+                }
+
+                std::erase_if(bodyIds, [&](b2BodyId id) { return B2_ID_EQUALS(id, bodyId); });
+                for (auto& group : particleWorld.groups)
+                {
+                    std::erase_if(group.particles, [&](Particle p) { return B2_ID_EQUALS(p.bodyId, bodyId); });
+                }
+                b2DestroyBody(bodyId);
+            }
+        }
+        bodyDestroyBuffer.clear();
     }
     return;
 }

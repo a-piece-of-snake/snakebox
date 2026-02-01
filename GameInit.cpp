@@ -79,45 +79,6 @@ void Game::InitImGui()
     ImVec4* colors = ImGui::GetStyle().Colors;
 
     //colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.51f, 0.51f, 0.70f);
-    // colors[ImGuiCol_Text] = ImVec4(0.85f, 0.51f, 0.51f, 1.00f);
-    // colors[ImGuiCol_TextDisabled] = ImVec4(0.65f, 0.45f, 0.45f, 1.00f);
-    // colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.89f);
-    // colors[ImGuiCol_ChildBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.71f);
-    // colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.10f, 0.16f, 0.77f);
-    // colors[ImGuiCol_Border] = ImVec4(1.00f, 0.75f, 0.75f, 0.34f);
-    // colors[ImGuiCol_FrameBg] = ImVec4(0.46f, 0.25f, 0.25f, 0.50f);
-    // colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 0.75f, 0.75f, 0.39f);
-    // colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.29f, 0.29f, 0.47f);
-    // colors[ImGuiCol_TitleBg] = ImVec4(0.78f, 0.32f, 0.36f, 0.34f);
-    // colors[ImGuiCol_TitleBgActive] = ImVec4(0.88f, 0.42f, 0.46f, 0.34f);
-    // colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.62f, 0.85f, 1.00f);
-    // colors[ImGuiCol_TextLink] = ImVec4(0.93f, 0.50f, 0.96f, 1.00f);
-    // colors[ImGuiCol_TextSelectedBg] = ImVec4(0.93f, 0.70f, 0.70f, 0.40f);
-    // colors[ImGuiCol_TreeLines] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
-    // colors[ImGuiCol_NavCursor] = ImVec4(0.98f, 0.33f, 0.26f, 1.00f);
-    // colors[ImGuiCol_SliderGrab] = ImVec4(0.84f, 0.40f, 0.40f, 1.00f);
-    // colors[ImGuiCol_SliderGrabActive] = ImVec4(0.79f, 0.33f, 0.33f, 1.00f);
-    // colors[ImGuiCol_Button] = ImVec4(0.98f, 0.26f, 0.26f, 0.40f);
-    // colors[ImGuiCol_ButtonHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    // colors[ImGuiCol_ButtonActive] = ImVec4(0.94f, 0.20f, 0.20f, 0.89f);
-    // colors[ImGuiCol_Header] = ImVec4(0.98f, 0.26f, 0.26f, 0.31f);
-    // colors[ImGuiCol_HeaderHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    // colors[ImGuiCol_HeaderActive] = ImVec4(0.96f, 0.37f, 0.37f, 1.00f);
-    // colors[ImGuiCol_Separator] = ImVec4(0.50f, 0.43f, 0.43f, 0.50f);
-    // colors[ImGuiCol_SeparatorHovered] = ImVec4(0.75f, 0.10f, 0.10f, 0.78f);
-    // colors[ImGuiCol_SeparatorActive] = ImVec4(0.68f, 0.18f, 0.18f, 1.00f);
-    // colors[ImGuiCol_ResizeGrip] = ImVec4(0.98f, 0.26f, 0.26f, 0.20f);
-    // colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.93f, 0.31f, 0.31f, 0.67f);
-    // colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.26f, 0.26f, 0.88f);
-    // colors[ImGuiCol_InputTextCursor] = ImVec4(0.72f, 0.34f, 0.34f, 1.00f);
-    // colors[ImGuiCol_TabHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
-    // colors[ImGuiCol_Tab] = ImVec4(0.58f, 0.18f, 0.18f, 0.86f);
-    // colors[ImGuiCol_TabSelected] = ImVec4(0.68f, 0.20f, 0.20f, 1.00f);
-    // colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
-    // colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.42f, 0.14f, 0.14f, 1.00f);
-
-
-    //colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.51f, 0.51f, 0.70f);
     ImVec4 bg = ImVec4(0.12f, 0.12f, 0.18f, 0.85f);
     ImVec4 fg = ImVec4(0.82f, 0.53f, 0.64f, 1.00f);
     ImVec4 sub_fg = ImVec4(0.69f, 0.55f, 0.70f, 1.00f);

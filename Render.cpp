@@ -33,8 +33,6 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
 {
     shapeVertices.clear();
     outlineVertices.clear();
-    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
-    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
     for (const auto& bodyId : bodyIds)
     {
         int shapecount = b2Body_GetShapeCount(bodyId);
@@ -97,7 +95,7 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
                              worldVertices[i].position,
                              worldVertices[(i + 1) % shape.count].position,
                              WIDTH,
-                             outlineColor);
+                             getColorStyle()[ColorKeys::b2BodyOutline]);
                 }
 
                 auto triangles = triangulate(std::vector<b2Vec2>(shape.vertices, shape.vertices + shape.count));
@@ -166,14 +164,19 @@ void drawB2(SDL_Renderer* renderer, const std::vector<b2BodyId>& bodyIds, SDL_Te
                     shapeVertices.push_back(centerV);
                     shapeVertices.push_back(v1);
                     shapeVertices.push_back(v2);
-                    makeLine(&outlineVertices, v1.position, v2.position, WIDTH, outlineColor);
+                    makeLine(
+                        &outlineVertices, v1.position, v2.position, WIDTH, getColorStyle()[ColorKeys::b2BodyOutline]);
                 }
 
                 float indicatorLength = r * 0.8f;
                 b2Vec2 tipLocal = {center.x + indicatorLength * cosAngle, center.y + indicatorLength * sinAngle};
                 b2Vec2 tipWorld = {pos.x + tipLocal.x * cosAngle - tipLocal.y * sinAngle,
                                    pos.y + tipLocal.x * sinAngle + tipLocal.y * cosAngle};
-                makeLine(&outlineVertices, {cx, cy}, {tipWorld.x, tipWorld.y}, WIDTH, outlineColor);
+                makeLine(&outlineVertices,
+                         {cx, cy},
+                         {tipWorld.x, tipWorld.y},
+                         WIDTH,
+                         getColorStyle()[ColorKeys::b2BodyOutline]);
             }
         }
     }
@@ -191,8 +194,6 @@ void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld)
     shapeVertices.reserve(totalParticles * 3);
     outlineVertices.clear();
     outlineVertices.reserve(totalParticles * 18);
-    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
-    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
     static const b2Vec2 offect[3] = {{1, 0}, {-1, 1}, {-1, -1}};
     for (const ParticleGroup& group : particleWorld.groups)
     {
@@ -208,9 +209,12 @@ void drawFluid(SDL_Renderer* renderer, const ParticleWorld& particleWorld)
                 SDL_FPoint{pos2.x, pos2.y}, getColorStyle()[ColorKeys::b2Body], SDL_FPoint{0, 0});
             shapeVertices.emplace_back(
                 SDL_FPoint{pos3.x, pos3.y}, getColorStyle()[ColorKeys::b2Body], SDL_FPoint{0, 0});
-            makeLine(&outlineVertices, {pos1.x, pos1.y}, {pos2.x, pos2.y}, WIDTH, outlineColor);
-            makeLine(&outlineVertices, {pos2.x, pos2.y}, {pos3.x, pos3.y}, WIDTH, outlineColor);
-            makeLine(&outlineVertices, {pos3.x, pos3.y}, {pos1.x, pos1.y}, WIDTH, outlineColor);
+            makeLine(
+                &outlineVertices, {pos1.x, pos1.y}, {pos2.x, pos2.y}, WIDTH, getColorStyle()[ColorKeys::b2BodyOutline]);
+            makeLine(
+                &outlineVertices, {pos2.x, pos2.y}, {pos3.x, pos3.y}, WIDTH, getColorStyle()[ColorKeys::b2BodyOutline]);
+            makeLine(
+                &outlineVertices, {pos3.x, pos3.y}, {pos1.x, pos1.y}, WIDTH, getColorStyle()[ColorKeys::b2BodyOutline]);
         }
     }
     SDL_RenderGeometry(renderer, nullptr, shapeVertices.data(), shapeVertices.size(), nullptr, 0);
