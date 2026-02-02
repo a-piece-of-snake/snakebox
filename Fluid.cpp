@@ -90,9 +90,9 @@ void ParticleGroup::step(float timestep)
 
         b2Vec2 argPos = b2Vec2_zero;
         float density = 0.f;
-        for (int i = -1; i <= 1; i++)
+        for (int i = -1; i <= 1; ++i)
         {
-            for (int j = -1; j <= 1; j++)
+            for (int j = -1; j <= 1; ++j)
             {
                 SDL_Point otherGridPos = {gridPos.x + i, gridPos.y + j};
                 for (auto& other : world->grids[getGridIndex(otherGridPos, 50000)])

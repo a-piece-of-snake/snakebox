@@ -15,8 +15,8 @@ namespace ColorKeys
 enum colorKeys : size_t
 {
     b2Body = 0,
-    b2BodyOutline = 1,
-    b2Joint = 2,
+    b2BodyOutline,
+    b2Joint,
     COUNT
 };
 } // namespace ColorKeys

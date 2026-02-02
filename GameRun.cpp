@@ -1,4 +1,6 @@
+#include <SDL3/SDL_pixels.h>
 #include <box2d/box2d.h>
+#include <imgui.h>
 
 #include "Fluid.h"
 #include "Game.h"
@@ -51,11 +53,11 @@ void Game::Update()
     SDL_GetMouseState(&mousePos.x, &mousePos.y);
     worldPos = {mousePos.x, mousePos.y};
 
-    float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
-    SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
-    SDL_FColor bodyColor = HSLAtoRGBA_F(hue, 1.f, 0.5f, 0.5f);
-    getColorStyle()[ColorKeys::b2BodyOutline] = outlineColor;
-    getColorStyle()[ColorKeys::b2Body] = bodyColor;
+    // float hue = fmodf(SDL_GetTicks() / 10.0f, 360.0f);
+    // SDL_FColor outlineColor = HSLAtoRGBA_F(hue, 1.f, 0.5f);
+    // SDL_FColor bodyColor = HSLAtoRGBA_F(hue, 1.f, 0.5f, 0.5f);
+    // getColorStyle()[ColorKeys::b2BodyOutline] = outlineColor;
+    // getColorStyle()[ColorKeys::b2Body] = bodyColor;
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -146,6 +148,62 @@ void Game::ImGuiRelated()
     // }
 
     spawnableBrowser.render();
+
+    //临时放在这里
+    if (ImGui::Begin("Style Editor"))
+    {
+        auto& style = getColorStyle();
+        const char* keyNames[] = {"Body Color", "Outline Color", "Joint Color"};
+
+        static SDL_FColor originalColor;
+        static int tick = -1;
+        static int activeHelpId = -1;
+
+        if (tick >= 0)
+            tick--;
+
+        for (int i = 0; i < ColorKeys::COUNT; ++i)
+        {
+            ImGui::PushID(i);
+
+            if (ImGui::Button("?"))
+            {
+                if (activeHelpId != -1)
+                {
+                    style[activeHelpId] = originalColor;
+                }
+
+                activeHelpId = i;
+                tick = 120;
+                originalColor = style[i];
+            }
+
+            ImGui::SameLine();
+
+            float* targetColor = (activeHelpId == i) ? &originalColor.r : &style[i].r;
+
+            if (ImGui::ColorEdit4(keyNames[i], targetColor))
+            {
+            }
+
+            if (activeHelpId == i)
+            {
+                if (tick > 0)
+                {
+                    float hue = fmodf(tick * 3.f, 360.0f);
+                    style[i] = HSLAtoRGBA_F(hue, 1.f, 0.5f);
+                }
+                else if (tick == 0)
+                {
+                    style[i] = originalColor;
+                    activeHelpId = -1;
+                }
+            }
+
+            ImGui::PopID();
+        }
+    }
+    ImGui::End();
 }
 void Game::KeyLogic()
 {
