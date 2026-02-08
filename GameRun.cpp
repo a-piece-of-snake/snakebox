@@ -35,7 +35,22 @@ bool QueryCallback(b2ShapeId shapeId, void* context)
 
     return true;
 }
+bool QueryCallback_a(b2ShapeId shapeId, void* context)
+{
+    QueryContext* queryContext = static_cast<QueryContext*>(context);
 
+    b2BodyId bodyId = b2Shape_GetBody(shapeId);
+    b2BodyType bodyType = b2Body_GetType(bodyId);
+    bool overlap = b2Shape_TestPoint(shapeId, queryContext->point);
+    if (overlap)
+    {
+        // found shape
+        queryContext->bodyId = bodyId;
+        return false;
+    }
+
+    return true;
+}
 void Game::Run()
 {
     while (running)
@@ -204,6 +219,57 @@ void Game::ImGuiRelated()
         }
     }
     ImGui::End();
+
+    static bool show_exit_confirm = false;
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Undo"))
+            {
+            }
+            if (ImGui::MenuItem("Redo"))
+            {
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("New"))
+            {
+            }
+            if (ImGui::MenuItem("Open"))
+            {
+            }
+            if (ImGui::MenuItem("Save"))
+            {
+            }
+            if (ImGui::MenuItem("Exit"))
+            {
+                show_exit_confirm = true;
+                ImGui::SetNextWindowPos(ImGui::GetMousePos());
+            }
+            ImGui::EndMenu();
+        }
+    }
+    ImGui::EndMainMenuBar();
+    if (show_exit_confirm)
+    {
+        if (ImGui::Begin("Exit Confirm", &show_exit_confirm, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("ARE YOU SURE?");
+            if (ImGui::Button("Yes"))
+            {
+                running = false;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("No"))
+            {
+                show_exit_confirm = false;
+            }
+        }
+        ImGui::End();
+    }
 }
 void Game::KeyLogic()
 {
@@ -256,7 +322,10 @@ void Game::KeyLogic()
 
         // Query the world for overlapping shapes.
         QueryContext queryContext = {p, b2_nullBodyId};
-        b2World_OverlapAABB(worldId, box, b2DefaultQueryFilter(), QueryCallback, &queryContext);
+        if (keyStates[SDL_SCANCODE_A])
+            b2World_OverlapAABB(worldId, box, b2DefaultQueryFilter(), QueryCallback_a, &queryContext);
+        else
+            b2World_OverlapAABB(worldId, box, b2DefaultQueryFilter(), QueryCallback, &queryContext);
 
         if (B2_IS_NON_NULL(queryContext.bodyId))
         {

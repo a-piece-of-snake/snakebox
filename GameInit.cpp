@@ -10,7 +10,6 @@ Game::Game()
     mouseJointId = b2_nullJointId;
     mouseBodyId = b2_nullBodyId;
 
-    // 初始化其他成员变量（根据你的 Game.h）
     tickCount = 0;
     pause = false;
     particleCount = 0;

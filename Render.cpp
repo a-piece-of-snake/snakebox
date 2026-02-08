@@ -4,7 +4,7 @@
 
 #include "Math.h"
 
-const float WIDTH = 1;
+const float WIDTH = 2;
 static std::vector<SDL_Vertex> shapeVertices;
 static std::vector<SDL_Vertex> outlineVertices;
 
